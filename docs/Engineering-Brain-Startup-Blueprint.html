@@ -1,0 +1,2779 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Engineering Brain Startup Blueprint</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.55; color: #1f2937; max-width: 980px; margin: 48px auto; padding: 0 28px; }
+    h1 { color: #111827; font-size: 34px; margin-top: 42px; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; }
+    h2 { color: #111827; font-size: 25px; margin-top: 32px; }
+    h3 { color: #374151; font-size: 19px; margin-top: 24px; }
+    p { margin: 8px 0; }
+    .bullet { margin-left: 20px; }
+    pre { background: #111827; color: #f9fafb; padding: 16px; overflow: auto; border-radius: 8px; }
+    code { font-family: Consolas, "Courier New", monospace; font-size: 13px; }
+    hr { border: 0; border-top: 1px solid #e5e7eb; margin: 32px 0; }
+  </style>
+</head>
+<body>
+<h1>Engineering Brain Startup Blueprint</h1>
+
+<p>Version: 1.0  </p>
+<p>Date: 2026-05-30  </p>
+<p>Audience: student founding team, technical mentors, early users, incubators, and investors</p>
+
+<h2>Executive Summary</h2>
+
+<p>Engineering Brain is an AI engineering intelligence platform that understands a company's repositories, pull requests, commit history, documentation, and architecture, then answers engineering questions like a senior engineer who has read the whole codebase.</p>
+
+<p>The best MVP is intentionally narrow: GitHub plus documentation only. Do not start with Slack, Jira, email, Confluence, Linear, Notion, incident tools, or deployment logs. Those integrations can come later. The first product should deeply understand repositories, architecture, PRs, and docs, because this is where engineering teams feel the most pain and where a student team can build a credible demo in 3 to 4 months.</p>
+
+<p>The wedge feature should be an AI PR Review Agent that comments on GitHub pull requests and cites codebase context, documentation, and past architectural decisions. This creates an immediate demo moment: &quot;The system remembers why we built the architecture this way and catches violations before a senior engineer has to.&quot;</p>
+
+<p>This blueprint assumes a near-zero budget and uses open-source software, free tiers, and self-hosted components wherever possible.</p>
+
+<h2>Sources and Market Notes</h2>
+
+<p>Market and free-tier assumptions should be rechecked before fundraising or production launch because cloud pricing changes frequently.</p>
+
+<p class="bullet">• Grand View Research estimated the AI code assistants market at USD 8.5B in 2025 with a forecast of USD 42.9B by 2033.</p>
+<p class="bullet">• Market.us estimated the AI code assistant market at USD 5.5B in 2024 and USD 47.3B by 2034.</p>
+<p class="bullet">• GitHub Copilot reportedly crossed 20M all-time users in 2025.</p>
+<p class="bullet">• Render's free documentation states that free web services and datastores are for previews, hobby projects, and testing, not production.</p>
+<p class="bullet">• Neo4j lists AuraDB Free at USD 0 with no credit card required.</p>
+<p class="bullet">• Cloudflare R2's official pricing lists a free tier of 10 GB-month storage, 1M Class A operations, 10M Class B operations, and free egress for standard storage.</p>
+<p class="bullet">• Upstash's official pricing lists a free Redis tier with 256 MB data and 500K monthly commands.</p>
+
+<p>Useful links:</p>
+
+<p class="bullet">• https://www.grandviewresearch.com/industry-analysis/ai-code-assistants-market-report</p>
+<p class="bullet">• https://market.us/report/ai-code-assistant-market/</p>
+<p class="bullet">• https://techcrunch.com/2025/07/30/github-copilot-crosses-20-million-all-time-users/</p>
+<p class="bullet">• https://render.com/free</p>
+<p class="bullet">• https://neo4j.com/pricing/</p>
+<p class="bullet">• https://developers.cloudflare.com/r2/pricing/</p>
+<p class="bullet">• https://upstash.com/pricing</p>
+<p class="bullet">• https://sourcegraph.com/docs/cody</p>
+<p class="bullet">• https://www.glean.com/product/ai-search</p>
+
+<hr>
+
+<h1>Section 1: Market Analysis</h1>
+
+<h2>Problem Statement</h2>
+
+<p>Engineering knowledge is fragmented across code, pull requests, commit messages, docs, diagrams, issues, tribal memory, and senior engineers' heads. New engineers waste weeks trying to understand architecture. Senior engineers are interrupted repeatedly for context. AI coding tools can write snippets, but they often lack durable organizational memory and cannot explain why a codebase evolved the way it did.</p>
+
+<p>The core pain:</p>
+
+<p class="bullet">• Onboarding takes too long.</p>
+<p class="bullet">• Code search is keyword-based and misses intent.</p>
+<p class="bullet">• Documentation becomes stale.</p>
+<p class="bullet">• Architecture decisions are buried in old PRs and comments.</p>
+<p class="bullet">• Pull request reviews depend heavily on a small number of senior engineers.</p>
+<p class="bullet">• AI coding tools hallucinate when they do not understand the actual repository.</p>
+<p class="bullet">• Teams cannot easily ask, &quot;What breaks if we change this?&quot;</p>
+
+<h2>Target Users</h2>
+
+<p>Primary users:</p>
+
+<p class="bullet">• Engineering teams with 5 to 100 developers.</p>
+<p class="bullet">• Startups with fast-changing codebases.</p>
+<p class="bullet">• Open-source maintainers.</p>
+<p class="bullet">• Student engineering teams and hackathon teams.</p>
+<p class="bullet">• Agencies maintaining multiple client repositories.</p>
+
+<p>Buyer personas:</p>
+
+<p class="bullet">• CTO or technical founder who wants faster onboarding and better review quality.</p>
+<p class="bullet">• Engineering manager who wants less senior-engineer interruption.</p>
+<p class="bullet">• Staff engineer who wants architectural consistency.</p>
+<p class="bullet">• Developer productivity lead who wants AI tooling with codebase context.</p>
+
+<p>Early adopter profile:</p>
+
+<p class="bullet">• Uses GitHub.</p>
+<p class="bullet">• Has at least 3 repositories or one medium-size monorepo.</p>
+<p class="bullet">• Has docs in Markdown, README files, ADRs, or docs folders.</p>
+<p class="bullet">• Reviews pull requests regularly.</p>
+<p class="bullet">• Already uses ChatGPT, Claude, Cursor, Copilot, or Sourcegraph but still struggles with organization-specific context.</p>
+
+<h2>Competitor Analysis</h2>
+
+<h3>GitHub Copilot</h3>
+
+<p>Strengths:</p>
+
+<p class="bullet">• Deep GitHub and IDE distribution.</p>
+<p class="bullet">• Strong code completion and chat.</p>
+<p class="bullet">• Increasingly agentic.</p>
+<p class="bullet">• Trusted by many enterprise teams.</p>
+
+<p>Weaknesses:</p>
+
+<p class="bullet">• Often optimized for individual coding flow more than organizational memory.</p>
+<p class="bullet">• Context can be shallow or session-based.</p>
+<p class="bullet">• Explaining architecture across repos is still inconsistent.</p>
+<p class="bullet">• PR review may not be deeply grounded in team-specific historical decisions.</p>
+
+<h3>Sourcegraph Cody and Sourcegraph Code Search</h3>
+
+<p>Strengths:</p>
+
+<p class="bullet">• Excellent code search heritage.</p>
+<p class="bullet">• Strong repository indexing.</p>
+<p class="bullet">• Enterprise code intelligence positioning.</p>
+<p class="bullet">• Multi-repository context.</p>
+
+<p>Weaknesses:</p>
+
+<p class="bullet">• Enterprise-oriented and potentially heavy for small teams.</p>
+<p class="bullet">• Less accessible to a student-built, open-source, free-first audience.</p>
+<p class="bullet">• Complex setup for small teams that only need GitHub plus docs intelligence.</p>
+
+<h3>Glean</h3>
+
+<p>Strengths:</p>
+
+<p class="bullet">• Strong enterprise knowledge search.</p>
+<p class="bullet">• Connectors across many workplace systems.</p>
+<p class="bullet">• Knowledge graph positioning.</p>
+
+<p>Weaknesses:</p>
+
+<p class="bullet">• Broad enterprise search, not engineering-first.</p>
+<p class="bullet">• May be expensive or too broad for startups.</p>
+<p class="bullet">• Less focused on PR review, code graph reasoning, and code architecture.</p>
+
+<h3>Cursor, Windsurf, Claude Code, OpenAI Codex-style coding agents</h3>
+
+<p>Strengths:</p>
+
+<p class="bullet">• Strong coding velocity.</p>
+<p class="bullet">• Excellent developer experience.</p>
+<p class="bullet">• Agentic editing and task execution.</p>
+
+<p>Weaknesses:</p>
+
+<p class="bullet">• Typically oriented around the current workspace or task.</p>
+<p class="bullet">• Less likely to maintain a durable company-wide engineering memory.</p>
+<p class="bullet">• May not build a persistent graph of architecture, PRs, decisions, and ownership.</p>
+
+<h3>Swimm, Mintlify, ReadMe, documentation assistants</h3>
+
+<p>Strengths:</p>
+
+<p class="bullet">• Good documentation workflows.</p>
+<p class="bullet">• Help keep docs closer to code.</p>
+
+<p>Weaknesses:</p>
+
+<p class="bullet">• Not a full engineering brain.</p>
+<p class="bullet">• Usually do not combine repository graph, PR history, architecture reasoning, and review automation.</p>
+
+<h2>Why Current Solutions Fail</h2>
+
+<p>Current solutions often fail because they are either:</p>
+
+<p class="bullet">• Too local: They understand the open editor, not the organization.</p>
+<p class="bullet">• Too generic: They answer with plausible AI text but lack grounded code context.</p>
+<p class="bullet">• Too expensive: Enterprise search and AI tools are unaffordable for students and small startups.</p>
+<p class="bullet">• Too broad: They integrate every SaaS tool before deeply solving code intelligence.</p>
+<p class="bullet">• Too passive: They wait for questions instead of appearing in PRs at the moment of engineering decision.</p>
+<p class="bullet">• Too temporary: They do not maintain a persistent, queryable memory that improves over time.</p>
+
+<h2>Unique Value Proposition</h2>
+
+<p>Engineering Brain is the open, free-first AI memory layer for engineering teams.</p>
+
+<p>Positioning:</p>
+
+<p>&quot;Connect GitHub and docs. Get a senior-engineer-level assistant that answers architecture questions, explains code relationships, and reviews pull requests using your team's actual engineering history.&quot;</p>
+
+<p>Core differentiators:</p>
+
+<p class="bullet">• GitHub-native from day one.</p>
+<p class="bullet">• Documentation-aware and architecture-aware.</p>
+<p class="bullet">• Knowledge graph plus RAG, not only vector search.</p>
+<p class="bullet">• PR comments cite files, docs, commits, and past decisions.</p>
+<p class="bullet">• Free or near-zero-cost deployment for small teams.</p>
+<p class="bullet">• Open-source-first community strategy.</p>
+<p class="bullet">• Designed for students and startups before enterprise.</p>
+
+<h2>Market Size Estimation</h2>
+
+<p>Top-down:</p>
+
+<p class="bullet">• The AI code assistant market is already measured in multiple billions of dollars and is forecast to grow rapidly through the 2030s.</p>
+<p class="bullet">• Developer tools is a large existing software category, and AI is creating a new layer around code search, review, documentation, and autonomous engineering.</p>
+
+<p>Bottom-up:</p>
+
+<p class="bullet">• GitHub has well over 100M developers globally.</p>
+<p class="bullet">• If only 1 percent of active professional GitHub teams pay USD 20 to USD 100 per developer per month for engineering intelligence, the opportunity is large.</p>
+<p class="bullet">• A narrow beachhead of startups with 5 to 50 engineers is enough for a meaningful seed-stage business.</p>
+
+<p>Practical student-team goal:</p>
+
+<p class="bullet">• First 10 users: open-source maintainers, student teams, local startups.</p>
+<p class="bullet">• First 100 users: GitHub public repo analyzer plus PR agent waitlist.</p>
+<p class="bullet">• First 10 paying teams: small startups that want PR review and onboarding acceleration.</p>
+
+<hr>
+
+<h1>Section 2: Product Requirements</h1>
+
+<h2>Core MVP Features</h2>
+
+<p>The MVP should include:</p>
+
+<p class="bullet">1. GitHub repository connection.</p>
+<p class="bullet">2. Repository ingestion for code, README files, Markdown docs, package files, config files, and architecture docs.</p>
+<p class="bullet">3. Incremental updates through GitHub webhooks.</p>
+<p class="bullet">4. Code-aware chunking and embedding.</p>
+<p class="bullet">5. Hybrid search: keyword plus vector plus graph.</p>
+<p class="bullet">6. Chat interface for engineering questions.</p>
+<p class="bullet">7. Architecture summary generation.</p>
+<p class="bullet">8. File, function, class, and dependency relationship mapping.</p>
+<p class="bullet">9. PR Review Agent that comments on GitHub pull requests.</p>
+<p class="bullet">10. Source citations for every important answer.</p>
+<p class="bullet">11. Admin dashboard for indexing status.</p>
+<p class="bullet">12. Public repo analyzer with no signup for growth.</p>
+
+<h2>Advanced Features</h2>
+
+<p>Add after the MVP is validated:</p>
+
+<p class="bullet">• ADR extraction from PRs and docs.</p>
+<p class="bullet">• Ownership inference by commit history.</p>
+<p class="bullet">• &quot;What breaks if...&quot; impact analysis.</p>
+<p class="bullet">• Bug investigation workflows.</p>
+<p class="bullet">• Test recommendation agent.</p>
+<p class="bullet">• Release risk summaries.</p>
+<p class="bullet">• Monorepo service map.</p>
+<p class="bullet">• API contract map.</p>
+<p class="bullet">• IDE extension.</p>
+<p class="bullet">• Slack or Discord bot.</p>
+<p class="bullet">• Jira, Linear, Notion, Confluence integrations.</p>
+<p class="bullet">• Self-hosted enterprise deployment.</p>
+<p class="bullet">• Fine-tuned reranker for code and docs.</p>
+<p class="bullet">• Autonomous issue-to-PR agent.</p>
+
+<h2>Future Vision</h2>
+
+<p>Long-term, Engineering Brain becomes:</p>
+
+<p class="bullet">• The memory layer for engineering organizations.</p>
+<p class="bullet">• A codebase-native AI architect.</p>
+<p class="bullet">• A PR reviewer with institutional context.</p>
+<p class="bullet">• An onboarding companion for every new engineer.</p>
+<p class="bullet">• A platform for autonomous AI engineers that can safely modify code because they understand the system.</p>
+
+<h2>User Stories</h2>
+
+<p>As a new engineer:</p>
+
+<p class="bullet">• I want to ask what a service does so that I can onboard faster.</p>
+<p class="bullet">• I want to understand why a pattern exists so that I do not rewrite old mistakes.</p>
+<p class="bullet">• I want file and function citations so that I can verify the answer.</p>
+
+<p>As a senior engineer:</p>
+
+<p class="bullet">• I want the assistant to answer repetitive architecture questions.</p>
+<p class="bullet">• I want PR comments when a change violates existing architecture.</p>
+<p class="bullet">• I want architecture summaries generated from the current repo state.</p>
+
+<p>As an engineering manager:</p>
+
+<p class="bullet">• I want to reduce onboarding time.</p>
+<p class="bullet">• I want visibility into documentation gaps.</p>
+<p class="bullet">• I want safer PR review without adding more process.</p>
+
+<p>As an open-source maintainer:</p>
+
+<p class="bullet">• I want contributors to understand the codebase before opening PRs.</p>
+<p class="bullet">• I want automated guidance for PRs that touch risky areas.</p>
+
+<h2>User Flows</h2>
+
+<h3>Flow 1: Connect a Repository</h3>
+
+<p class="bullet">1. User signs in with GitHub.</p>
+<p class="bullet">2. User installs GitHub App on selected repositories.</p>
+<p class="bullet">3. Backend receives installation event.</p>
+<p class="bullet">4. Ingestion worker clones or fetches repository contents.</p>
+<p class="bullet">5. Parser extracts files, symbols, dependencies, docs, and metadata.</p>
+<p class="bullet">6. Embedding worker creates chunks and embeddings.</p>
+<p class="bullet">7. Graph worker creates file, symbol, dependency, and PR relationships.</p>
+<p class="bullet">8. Dashboard shows &quot;Index ready.&quot;</p>
+
+<h3>Flow 2: Ask an Engineering Question</h3>
+
+<p class="bullet">1. User asks: &quot;How does authentication work?&quot;</p>
+<p class="bullet">2. Query planner classifies the question as architecture plus code explanation.</p>
+<p class="bullet">3. Retrieval fetches docs, files, symbols, and graph neighbors.</p>
+<p class="bullet">4. Reranker orders evidence.</p>
+<p class="bullet">5. LLM generates answer with citations.</p>
+<p class="bullet">6. UI shows answer, relevant files, and confidence notes.</p>
+
+<h3>Flow 3: PR Review Agent</h3>
+
+<p class="bullet">1. Developer opens a PR.</p>
+<p class="bullet">2. GitHub webhook triggers PR ingestion.</p>
+<p class="bullet">3. Diff analyzer identifies changed files and functions.</p>
+<p class="bullet">4. Agent retrieves related architecture docs, historical PRs, owners, and similar changes.</p>
+<p class="bullet">5. Agent checks for risks, missing tests, inconsistent patterns, and undocumented architecture changes.</p>
+<p class="bullet">6. Agent posts a GitHub review comment with citations.</p>
+<p class="bullet">7. User can mark feedback useful or false positive.</p>
+
+<h3>Flow 4: Public Repo Analyzer</h3>
+
+<p class="bullet">1. Visitor enters a public GitHub repo URL.</p>
+<p class="bullet">2. System performs a limited, rate-controlled ingest.</p>
+<p class="bullet">3. Visitor gets architecture map, top modules, setup summary, and suggested first issues.</p>
+<p class="bullet">4. Visitor can share the report.</p>
+<p class="bullet">5. Report page links to the full product waitlist.</p>
+
+<hr>
+
+<h1>Section 3: System Architecture</h1>
+
+<h2>High-Level Architecture</h2>
+
+<pre><code>
+                              +----------------------+
+                              |      GitHub App       |
+                              | OAuth + Webhooks + PR |
+                              +----------+-----------+
+                                         |
+                                         v
++------------------+        +-----------------------+        +--------------------+
+|   Web Frontend   | &lt;----&gt; |      API Backend      | &lt;----&gt; |  Auth + Tenancy    |
+| Next.js/React    |        | FastAPI or NestJS     |        | Supabase/GitHub    |
++--------+---------+        +-----------+-----------+        +--------------------+
+         |                              |
+         |                              v
+         |                    +---------------------+
+         |                    |     Job Queue       |
+         |                    | Redis / Upstash     |
+         |                    +----------+----------+
+         |                               |
+         v                               v
++------------------+        +-----------------------+        +--------------------+
+| Chat + Dashboard |        | Ingestion Workers     | -----&gt; | Object Storage     |
+| Search + Reports |        | Repo/PR/Docs parsing  |        | Cloudflare R2      |
++------------------+        +-----------+-----------+        +--------------------+
+                                         |
+               +-------------------------+--------------------------+
+               |                         |                          |
+               v                         v                          v
+      +----------------+        +----------------+          +----------------+
+      | PostgreSQL     |        | Vector Store   |          | Knowledge Graph|
+      | Supabase/Neon  |        | pgvector/Qdrant|          | Neo4j/Memgraph |
+      +----------------+        +----------------+          +----------------+
+               |                         |                          |
+               +-------------------------+--------------------------+
+                                         |
+                                         v
+                              +----------------------+
+                              | Retrieval + Agents   |
+                              | RAG + tools + memory |
+                              +----------+-----------+
+                                         |
+                                         v
+                              +----------------------+
+                              | LLM Layer            |
+                              | Ollama/Groq/Local    |
+                              +----------------------+
+</code></pre>
+
+<h2>Frontend</h2>
+
+<p>Recommended: Next.js with TypeScript and Tailwind CSS.</p>
+
+<p>Screens:</p>
+
+<p class="bullet">• Landing page with public repo analyzer.</p>
+<p class="bullet">• Login page.</p>
+<p class="bullet">• Repo connection page.</p>
+<p class="bullet">• Indexing dashboard.</p>
+<p class="bullet">• Chat with citations.</p>
+<p class="bullet">• Architecture map view.</p>
+<p class="bullet">• PR review configuration.</p>
+<p class="bullet">• Admin page for usage and logs.</p>
+
+<h2>Backend</h2>
+
+<p>Recommended: FastAPI with Python.</p>
+
+<p>Why:</p>
+
+<p class="bullet">• Python is ideal for parsing, ML, embeddings, LangGraph, LlamaIndex, and GitHub automation.</p>
+<p class="bullet">• FastAPI is fast enough and easy for students.</p>
+<p class="bullet">• OpenAPI docs come free.</p>
+
+<p>Core modules:</p>
+
+<p class="bullet">• Auth and organization tenancy.</p>
+<p class="bullet">• GitHub App webhook handler.</p>
+<p class="bullet">• Repository ingestion API.</p>
+<p class="bullet">• Search API.</p>
+<p class="bullet">• Chat API.</p>
+<p class="bullet">• Agent orchestration API.</p>
+<p class="bullet">• PR review API.</p>
+<p class="bullet">• Admin API.</p>
+
+<h2>Authentication</h2>
+
+<p>MVP:</p>
+
+<p class="bullet">• GitHub OAuth for user login.</p>
+<p class="bullet">• GitHub App installation for repository access.</p>
+<p class="bullet">• Supabase Auth can handle user sessions if the team wants speed.</p>
+
+<p>Authorization model:</p>
+
+<p class="bullet">• User belongs to organization.</p>
+<p class="bullet">• Organization has GitHub installations.</p>
+<p class="bullet">• Installation grants repository access.</p>
+<p class="bullet">• Repository belongs to organization.</p>
+<p class="bullet">• User permissions are synced from GitHub where possible.</p>
+
+<h2>Database</h2>
+
+<p>Use PostgreSQL as the source of truth for:</p>
+
+<p class="bullet">• Users.</p>
+<p class="bullet">• Organizations.</p>
+<p class="bullet">• Repositories.</p>
+<p class="bullet">• Ingestion jobs.</p>
+<p class="bullet">• Files and metadata.</p>
+<p class="bullet">• Chunks.</p>
+<p class="bullet">• PRs.</p>
+<p class="bullet">• Agent runs.</p>
+<p class="bullet">• Feedback.</p>
+<p class="bullet">• Billing later.</p>
+
+<p>Free options:</p>
+
+<p class="bullet">• Supabase Free.</p>
+<p class="bullet">• Neon Free.</p>
+<p class="bullet">• Local Docker Postgres for development.</p>
+
+<h2>Vector Database</h2>
+
+<p>Best MVP choice: pgvector inside PostgreSQL.</p>
+
+<p>Reason:</p>
+
+<p class="bullet">• Fewer moving pieces.</p>
+<p class="bullet">• Easy to query chunks and metadata together.</p>
+<p class="bullet">• Free with Supabase, Neon, or local Postgres.</p>
+
+<p>Upgrade path:</p>
+
+<p class="bullet">• Qdrant for larger-scale vector search.</p>
+<p class="bullet">• Weaviate or Milvus for enterprise scale.</p>
+<p class="bullet">• Managed vector DB only after revenue.</p>
+
+<h2>Knowledge Graph</h2>
+
+<p>MVP options:</p>
+
+<p class="bullet">1. Start with Postgres adjacency tables if Neo4j free limits are painful.</p>
+<p class="bullet">2. Use Neo4j AuraDB Free for graph demos and Cypher queries.</p>
+<p class="bullet">3. Use Memgraph locally if self-hosting.</p>
+
+<p>Graph is used for:</p>
+
+<p class="bullet">• File imports.</p>
+<p class="bullet">• Function calls.</p>
+<p class="bullet">• Class inheritance.</p>
+<p class="bullet">• PR touches file.</p>
+<p class="bullet">• Engineer owns file.</p>
+<p class="bullet">• Service exposes API.</p>
+<p class="bullet">• Doc describes module.</p>
+
+<h2>Agent Framework</h2>
+
+<p>Recommended:</p>
+
+<p class="bullet">• LangGraph for structured agent workflows.</p>
+<p class="bullet">• Plain Python functions for tools.</p>
+<p class="bullet">• Avoid overly complex multi-agent autonomy in the MVP.</p>
+
+<p>Key principle:</p>
+
+<p class="bullet">• Agents should be deterministic pipelines with LLM steps, not magical loops.</p>
+
+<h2>LLM Layer</h2>
+
+<p>Free-first stack:</p>
+
+<p class="bullet">• Local Ollama for development and demos.</p>
+<p class="bullet">• Qwen2.5-Coder, DeepSeek-Coder, CodeLlama, or StarCoder2 depending on hardware.</p>
+<p class="bullet">• Groq free developer API for hosted fast inference when available.</p>
+<p class="bullet">• Hugging Face free inference for experiments, with strict rate-limit expectations.</p>
+
+<p>Production principle:</p>
+
+<p class="bullet">• Build an LLM adapter so you can swap providers.</p>
+<p class="bullet">• Store prompts and model settings by task.</p>
+<p class="bullet">• Use smaller models for classification and bigger models for final synthesis.</p>
+
+<h2>Retrieval System</h2>
+
+<p>Use hybrid retrieval:</p>
+
+<pre><code>
+User question
+    |
+    v
+Query planner
+    |
+    +--&gt; Keyword search: exact symbols, filenames, error messages
+    +--&gt; Vector search: conceptual docs and code chunks
+    +--&gt; Graph traversal: dependencies, owners, neighboring functions
+    |
+    v
+Merge candidates
+    |
+    v
+Rerank
+    |
+    v
+Build compact context pack
+    |
+    v
+LLM answer with citations
+</code></pre>
+
+<h2>Tool Calling System</h2>
+
+<p>Tools should be typed, permissioned, and logged.</p>
+
+<p>MVP tools:</p>
+
+<p class="bullet">• search_code(query, repo_id)</p>
+<p class="bullet">• search_docs(query, repo_id)</p>
+<p class="bullet">• get_file(path, repo_id)</p>
+<p class="bullet">• get_symbol(symbol_id)</p>
+<p class="bullet">• get_graph_neighbors(entity_id)</p>
+<p class="bullet">• get_pr_diff(pr_id)</p>
+<p class="bullet">• get_related_prs(file_path)</p>
+<p class="bullet">• post_pr_comment(pr_id, body)</p>
+<p class="bullet">• create_architecture_summary(repo_id)</p>
+
+<h2>Deployment Architecture</h2>
+
+<p>Near-zero-cost deployment:</p>
+
+<pre><code>
+Cloudflare Pages
+    Frontend
+
+Render Free or Railway Trial
+    API service
+
+Render Free Worker or local scheduled worker
+    Ingestion and embedding jobs
+
+Supabase or Neon
+    Postgres + pgvector + auth
+
+Upstash Redis Free
+    Queue, rate limits, cache
+
+Neo4j AuraDB Free
+    Knowledge graph prototype
+
+Cloudflare R2 Free
+    Raw repo snapshots, generated reports, artifacts
+
+GitHub App
+    OAuth, webhooks, PR comments
+</code></pre>
+
+<p>Production upgrade:</p>
+
+<p class="bullet">• Move API and workers to Fly.io, Railway paid, Render paid, Kubernetes, or ECS.</p>
+<p class="bullet">• Move graph to paid Neo4j or self-hosted Memgraph.</p>
+<p class="bullet">• Move vector to Qdrant cluster.</p>
+<p class="bullet">• Add Sentry, OpenTelemetry, Grafana, and Prometheus.</p>
+
+<hr>
+
+<h1>Section 4: Free Tech Stack Only</h1>
+
+<h2>Frontend</h2>
+
+<p>Chosen: Next.js, React, TypeScript, Tailwind CSS, shadcn/ui.</p>
+
+<p>Why:</p>
+
+<p class="bullet">• Fast development.</p>
+<p class="bullet">• Great ecosystem.</p>
+<p class="bullet">• Easy deployment to Cloudflare Pages, Vercel, Netlify, or Render.</p>
+<p class="bullet">• Strong developer familiarity.</p>
+
+<p>Pros:</p>
+
+<p class="bullet">• Modern UI quickly.</p>
+<p class="bullet">• Good routing and API integration.</p>
+<p class="bullet">• Large open-source ecosystem.</p>
+
+<p>Cons:</p>
+
+<p class="bullet">• Can become complex if overused.</p>
+<p class="bullet">• Server components can confuse beginners.</p>
+
+<p>Alternatives:</p>
+
+<p class="bullet">• Vite + React for simpler frontend.</p>
+<p class="bullet">• SvelteKit for speed and smaller code.</p>
+<p class="bullet">• Remix for full-stack routing.</p>
+
+<p>Recommendation:</p>
+
+<p class="bullet">• Use Vite + React if the team is newer.</p>
+<p class="bullet">• Use Next.js if the team already knows it.</p>
+
+<h2>Backend</h2>
+
+<p>Chosen: FastAPI.</p>
+
+<p>Why:</p>
+
+<p class="bullet">• Python ecosystem is ideal for AI.</p>
+<p class="bullet">• Easy docs.</p>
+<p class="bullet">• Good async support.</p>
+
+<p>Pros:</p>
+
+<p class="bullet">• Fast to build.</p>
+<p class="bullet">• Works well with Pydantic.</p>
+<p class="bullet">• Easy background task integrations.</p>
+
+<p>Cons:</p>
+
+<p class="bullet">• Requires discipline for larger codebases.</p>
+<p class="bullet">• Async database patterns can confuse beginners.</p>
+
+<p>Alternatives:</p>
+
+<p class="bullet">• NestJS if the team prefers TypeScript.</p>
+<p class="bullet">• Django if the team wants batteries included.</p>
+<p class="bullet">• Go if the team wants performance and simplicity later.</p>
+
+<h2>Database</h2>
+
+<p>Chosen: PostgreSQL with Supabase Free or Neon Free.</p>
+
+<p>Why:</p>
+
+<p class="bullet">• Relational data is core to the product.</p>
+<p class="bullet">• Postgres can also host pgvector.</p>
+<p class="bullet">• SQL is reliable and familiar.</p>
+
+<p>Pros:</p>
+
+<p class="bullet">• Durable source of truth.</p>
+<p class="bullet">• Good indexing.</p>
+<p class="bullet">• Good ecosystem.</p>
+
+<p>Cons:</p>
+
+<p class="bullet">• Free-tier storage is limited.</p>
+<p class="bullet">• Large codebases require careful pruning.</p>
+
+<p>Alternatives:</p>
+
+<p class="bullet">• Local Postgres on a free VM.</p>
+<p class="bullet">• SQLite for local-only prototype.</p>
+
+<h2>Vector DB</h2>
+
+<p>Chosen: pgvector first.</p>
+
+<p>Why:</p>
+
+<p class="bullet">• Reduces infrastructure complexity.</p>
+<p class="bullet">• Good enough for MVP scale.</p>
+
+<p>Pros:</p>
+
+<p class="bullet">• Metadata joins are simple.</p>
+<p class="bullet">• Easy migrations.</p>
+<p class="bullet">• Free if Postgres is already free.</p>
+
+<p>Cons:</p>
+
+<p class="bullet">• Not as optimized as dedicated vector DBs.</p>
+<p class="bullet">• Scaling beyond millions of chunks requires work.</p>
+
+<p>Alternatives:</p>
+
+<p class="bullet">• Qdrant, best open-source upgrade.</p>
+<p class="bullet">• Weaviate for graph-like metadata.</p>
+<p class="bullet">• Milvus for larger infrastructure teams.</p>
+
+<h2>Knowledge Graph</h2>
+
+<p>Chosen: Neo4j AuraDB Free for hosted graph; Postgres graph tables as fallback.</p>
+
+<p>Why:</p>
+
+<p class="bullet">• Neo4j is easy to demo.</p>
+<p class="bullet">• Cypher is expressive.</p>
+<p class="bullet">• Graph visualization is valuable for architecture demos.</p>
+
+<p>Pros:</p>
+
+<p class="bullet">• Strong graph query language.</p>
+<p class="bullet">• Great for architecture relationships.</p>
+<p class="bullet">• Good visualization story.</p>
+
+<p>Cons:</p>
+
+<p class="bullet">• Free-tier capacity limits.</p>
+<p class="bullet">• Another database to maintain.</p>
+
+<p>Alternatives:</p>
+
+<p class="bullet">• Memgraph self-hosted.</p>
+<p class="bullet">• ArangoDB.</p>
+<p class="bullet">• Postgres recursive CTEs.</p>
+
+<h2>LLM</h2>
+
+<p>Chosen:</p>
+
+<p class="bullet">• Local Ollama for development.</p>
+<p class="bullet">• Groq free API for hosted demos when available.</p>
+<p class="bullet">• Provider adapter abstraction from day one.</p>
+
+<p>Pros:</p>
+
+<p class="bullet">• No required paid API.</p>
+<p class="bullet">• Keeps architecture future-proof.</p>
+<p class="bullet">• Local models improve privacy story.</p>
+
+<p>Cons:</p>
+
+<p class="bullet">• Local models need hardware.</p>
+<p class="bullet">• Free hosted APIs have rate limits and can change.</p>
+<p class="bullet">• Smaller models may be weaker at complex reasoning.</p>
+
+<p>Alternatives:</p>
+
+<p class="bullet">• Hugging Face inference.</p>
+<p class="bullet">• Together.ai free credits if available.</p>
+<p class="bullet">• OpenRouter free models if available.</p>
+<p class="bullet">• Paid OpenAI, Anthropic, or Gemini later.</p>
+
+<h2>Embedding Model</h2>
+
+<p>Chosen: BAAI/bge-small-en-v1.5 or nomic-embed-text.</p>
+
+<p>Why:</p>
+
+<p class="bullet">• Good open-source embeddings.</p>
+<p class="bullet">• Runs locally.</p>
+<p class="bullet">• Works for docs and code reasonably well.</p>
+
+<p>Pros:</p>
+
+<p class="bullet">• Free.</p>
+<p class="bullet">• Easy with sentence-transformers or Ollama.</p>
+<p class="bullet">• Lightweight.</p>
+
+<p>Cons:</p>
+
+<p class="bullet">• Code-specific retrieval may need better models.</p>
+<p class="bullet">• Cross-language retrieval may be weaker.</p>
+
+<p>Alternatives:</p>
+
+<p class="bullet">• jina-embeddings-v2-base-code.</p>
+<p class="bullet">• bge-base-en.</p>
+<p class="bullet">• e5-small-v2.</p>
+<p class="bullet">• Voyage/OpenAI paid later.</p>
+
+<h2>RAG Framework</h2>
+
+<p>Chosen: LlamaIndex or custom RAG pipeline.</p>
+
+<p>Recommendation:</p>
+
+<p class="bullet">• Start custom for ingestion, chunking, retrieval, and citations.</p>
+<p class="bullet">• Use LlamaIndex only for utilities if it speeds development.</p>
+
+<p>Pros:</p>
+
+<p class="bullet">• Custom pipeline teaches the team and avoids framework lock-in.</p>
+<p class="bullet">• LlamaIndex has useful readers and abstractions.</p>
+
+<p>Cons:</p>
+
+<p class="bullet">• Custom RAG needs careful testing.</p>
+<p class="bullet">• Framework abstractions can hide important details.</p>
+
+<h2>Agent Framework</h2>
+
+<p>Chosen: LangGraph.</p>
+
+<p>Why:</p>
+
+<p class="bullet">• Good for deterministic multi-step workflows.</p>
+<p class="bullet">• Supports state machines.</p>
+<p class="bullet">• Better than unbounded agent loops.</p>
+
+<p>Pros:</p>
+
+<p class="bullet">• Clear control flow.</p>
+<p class="bullet">• Testable nodes.</p>
+<p class="bullet">• Good fit for PR review pipelines.</p>
+
+<p>Cons:</p>
+
+<p class="bullet">• Learning curve.</p>
+<p class="bullet">• Can be overkill for simple chat.</p>
+
+<p>Alternative:</p>
+
+<p class="bullet">• Plain Python orchestration until Month 2.</p>
+
+<h2>DevOps</h2>
+
+<p>Chosen:</p>
+
+<p class="bullet">• Docker Compose for local development.</p>
+<p class="bullet">• GitHub Actions for CI.</p>
+<p class="bullet">• Cloudflare Pages for frontend.</p>
+<p class="bullet">• Render Free or Railway Trial for API.</p>
+<p class="bullet">• Supabase/Neon for Postgres.</p>
+
+<p>Pros:</p>
+
+<p class="bullet">• Free or almost free.</p>
+<p class="bullet">• Familiar to students.</p>
+<p class="bullet">• Easy demo deployment.</p>
+
+<p>Cons:</p>
+
+<p class="bullet">• Free services sleep.</p>
+<p class="bullet">• Cold starts can hurt demos.</p>
+<p class="bullet">• Limits can break during traffic spikes.</p>
+
+<h2>Monitoring</h2>
+
+<p>Chosen:</p>
+
+<p class="bullet">• OpenTelemetry instrumentation.</p>
+<p class="bullet">• Grafana Cloud Free if available.</p>
+<p class="bullet">• Sentry Free for frontend/backend errors.</p>
+<p class="bullet">• Structured logs in Postgres for agent runs.</p>
+
+<p>Pros:</p>
+
+<p class="bullet">• Enough for MVP.</p>
+<p class="bullet">• Helps debug agent quality.</p>
+
+<p>Cons:</p>
+
+<p class="bullet">• Free quotas.</p>
+<p class="bullet">• Requires discipline to add useful metadata.</p>
+
+<hr>
+
+<h1>Section 5: AI Architecture</h1>
+
+<h2>Shared Agent Principles</h2>
+
+<p>All agents should:</p>
+
+<p class="bullet">• Use retrieved evidence before answering.</p>
+<p class="bullet">• Cite files, docs, PRs, or commits.</p>
+<p class="bullet">• Separate facts from inferences.</p>
+<p class="bullet">• Refuse to make unsupported claims.</p>
+<p class="bullet">• Log inputs, retrieval results, prompts, outputs, and user feedback.</p>
+<p class="bullet">• Run with scoped repository permissions.</p>
+
+<h2>Repository Understanding Agent</h2>
+
+<p>Responsibilities:</p>
+
+<p class="bullet">• Ingest repositories.</p>
+<p class="bullet">• Detect languages, frameworks, services, and package managers.</p>
+<p class="bullet">• Parse files into code chunks and symbol records.</p>
+<p class="bullet">• Extract imports, exports, function definitions, class definitions, and routes.</p>
+<p class="bullet">• Summarize modules.</p>
+
+<p>Inputs:</p>
+
+<p class="bullet">• Repository URL or GitHub installation.</p>
+<p class="bullet">• Branch name.</p>
+<p class="bullet">• File tree.</p>
+<p class="bullet">• Commit metadata.</p>
+
+<p>Outputs:</p>
+
+<p class="bullet">• Repository summary.</p>
+<p class="bullet">• File summaries.</p>
+<p class="bullet">• Symbol index.</p>
+<p class="bullet">• Dependency edges.</p>
+<p class="bullet">• Framework detection report.</p>
+<p class="bullet">• Indexing status.</p>
+
+<p>Tools:</p>
+
+<p class="bullet">• tree-sitter parsers.</p>
+<p class="bullet">• ripgrep.</p>
+<p class="bullet">• language-specific static analyzers.</p>
+<p class="bullet">• package file parsers.</p>
+<p class="bullet">• embedding service.</p>
+<p class="bullet">• graph writer.</p>
+
+<p>Prompt skeleton:</p>
+
+<pre><code>
+You are analyzing a software repository.
+Given file paths, code snippets, docs, dependency files, and detected framework metadata,
+produce a concise engineering summary.
+Do not invent services or dependencies.
+Return:
+1. Primary purpose
+2. Main modules
+3. External dependencies
+4. Entry points
+5. Important risks or unknowns
+6. Files that support each claim
+</code></pre>
+
+<p>Memory:</p>
+
+<p class="bullet">• Persistent file summaries.</p>
+<p class="bullet">• Repository-level summary.</p>
+<p class="bullet">• Language and framework metadata.</p>
+<p class="bullet">• Previous ingestion snapshots.</p>
+
+<h2>Architecture Agent</h2>
+
+<p>Responsibilities:</p>
+
+<p class="bullet">• Generate architecture summaries.</p>
+<p class="bullet">• Build service maps.</p>
+<p class="bullet">• Explain module boundaries.</p>
+<p class="bullet">• Identify data flow and API flow.</p>
+<p class="bullet">• Compare implementation against docs.</p>
+
+<p>Inputs:</p>
+
+<p class="bullet">• Repository graph.</p>
+<p class="bullet">• Documentation chunks.</p>
+<p class="bullet">• Package manifests.</p>
+<p class="bullet">• API route files.</p>
+<p class="bullet">• Docker Compose, Kubernetes, Terraform, or deployment configs.</p>
+
+<p>Outputs:</p>
+
+<p class="bullet">• Architecture overview.</p>
+<p class="bullet">• Service dependency map.</p>
+<p class="bullet">• API map.</p>
+<p class="bullet">• Data flow summary.</p>
+<p class="bullet">• Architecture risks.</p>
+
+<p>Tools:</p>
+
+<p class="bullet">• graph traversal.</p>
+<p class="bullet">• code search.</p>
+<p class="bullet">• doc search.</p>
+<p class="bullet">• file fetch.</p>
+<p class="bullet">• diagram generator.</p>
+
+<p>Prompt skeleton:</p>
+
+<pre><code>
+You are a staff software architect.
+Use only the supplied evidence to explain the architecture.
+For every major claim, cite a file, doc, or graph relationship.
+If the evidence is incomplete, say what is missing.
+Return:
+1. System overview
+2. Main components
+3. Request/data flow
+4. Important dependencies
+5. Architecture decisions inferred from code
+6. Risks and documentation gaps
+</code></pre>
+
+<p>Memory:</p>
+
+<p class="bullet">• Architecture summaries by version.</p>
+<p class="bullet">• ADRs.</p>
+<p class="bullet">• Service ownership.</p>
+<p class="bullet">• Known architecture constraints.</p>
+
+<h2>Code Review Agent</h2>
+
+<p>Responsibilities:</p>
+
+<p class="bullet">• Review PR diffs.</p>
+<p class="bullet">• Detect architecture violations.</p>
+<p class="bullet">• Detect risky changes.</p>
+<p class="bullet">• Suggest missing tests.</p>
+<p class="bullet">• Cite historical decisions.</p>
+<p class="bullet">• Post comments to GitHub.</p>
+
+<p>Inputs:</p>
+
+<p class="bullet">• PR diff.</p>
+<p class="bullet">• Changed files.</p>
+<p class="bullet">• Related docs.</p>
+<p class="bullet">• Related PRs.</p>
+<p class="bullet">• Ownership metadata.</p>
+<p class="bullet">• Test files.</p>
+
+<p>Outputs:</p>
+
+<p class="bullet">• GitHub review comments.</p>
+<p class="bullet">• Risk score.</p>
+<p class="bullet">• Suggested test areas.</p>
+<p class="bullet">• Summary for maintainers.</p>
+
+<p>Tools:</p>
+
+<p class="bullet">• get_pr_diff.</p>
+<p class="bullet">• search_related_code.</p>
+<p class="bullet">• search_related_docs.</p>
+<p class="bullet">• get_past_prs_touching_files.</p>
+<p class="bullet">• get_file_owners.</p>
+<p class="bullet">• post_pr_comment.</p>
+
+<p>Prompt skeleton:</p>
+
+<pre><code>
+You are a senior engineer reviewing a pull request.
+Focus on correctness, architecture consistency, missing tests, security, and maintainability.
+Use the supplied repository context and PR diff.
+Only leave comments that are actionable and grounded in evidence.
+Avoid style nitpicks.
+Each comment must include:
+- Risk
+- Evidence
+- Suggested fix
+- Citation to code/docs/history
+</code></pre>
+
+<p>Memory:</p>
+
+<p class="bullet">• Past review comments.</p>
+<p class="bullet">• User feedback on comment quality.</p>
+<p class="bullet">• False positive records.</p>
+<p class="bullet">• Repository review rules.</p>
+
+<h2>Documentation Agent</h2>
+
+<p>Responsibilities:</p>
+
+<p class="bullet">• Summarize documentation.</p>
+<p class="bullet">• Detect stale docs.</p>
+<p class="bullet">• Generate README or architecture docs.</p>
+<p class="bullet">• Suggest ADRs from PRs.</p>
+
+<p>Inputs:</p>
+
+<p class="bullet">• Markdown docs.</p>
+<p class="bullet">• README files.</p>
+<p class="bullet">• Code summaries.</p>
+<p class="bullet">• Architecture graph.</p>
+<p class="bullet">• Recent PRs.</p>
+
+<p>Outputs:</p>
+
+<p class="bullet">• Doc summaries.</p>
+<p class="bullet">• Missing docs report.</p>
+<p class="bullet">• Draft docs.</p>
+<p class="bullet">• Staleness warnings.</p>
+
+<p>Tools:</p>
+
+<p class="bullet">• doc search.</p>
+<p class="bullet">• code search.</p>
+<p class="bullet">• graph traversal.</p>
+<p class="bullet">• markdown writer.</p>
+
+<p>Prompt skeleton:</p>
+
+<pre><code>
+You are a technical documentation engineer.
+Use code and docs evidence to identify documentation gaps.
+Do not rewrite docs unless asked.
+Return:
+1. Existing documentation summary
+2. Missing documentation
+3. Potentially stale documentation
+4. Suggested new doc pages
+5. Evidence for each finding
+</code></pre>
+
+<p>Memory:</p>
+
+<p class="bullet">• Doc versions.</p>
+<p class="bullet">• Generated summaries.</p>
+<p class="bullet">• Known stale docs.</p>
+
+<h2>Bug Investigation Agent</h2>
+
+<p>Responsibilities:</p>
+
+<p class="bullet">• Help investigate bugs.</p>
+<p class="bullet">• Find likely files and functions.</p>
+<p class="bullet">• Trace related code paths.</p>
+<p class="bullet">• Suggest reproduction steps.</p>
+<p class="bullet">• Suggest tests to add.</p>
+
+<p>Inputs:</p>
+
+<p class="bullet">• Bug report.</p>
+<p class="bullet">• Error message.</p>
+<p class="bullet">• Stack trace.</p>
+<p class="bullet">• Logs if provided later.</p>
+<p class="bullet">• Repository graph.</p>
+<p class="bullet">• Related issues and PRs.</p>
+
+<p>Outputs:</p>
+
+<p class="bullet">• Ranked suspected causes.</p>
+<p class="bullet">• Relevant files.</p>
+<p class="bullet">• Debugging plan.</p>
+<p class="bullet">• Test recommendations.</p>
+
+<p>Tools:</p>
+
+<p class="bullet">• exact search.</p>
+<p class="bullet">• symbol search.</p>
+<p class="bullet">• graph traversal.</p>
+<p class="bullet">• similar issue search.</p>
+<p class="bullet">• file fetch.</p>
+
+<p>Prompt skeleton:</p>
+
+<pre><code>
+You are debugging a production issue.
+Given the bug report, stack trace, and retrieved code context,
+rank possible causes.
+For each cause, include:
+- Why it is plausible
+- Evidence
+- What to inspect next
+- A minimal test or reproduction idea
+Do not claim certainty unless evidence is direct.
+</code></pre>
+
+<p>Memory:</p>
+
+<p class="bullet">• Past bugs.</p>
+<p class="bullet">• Fix PRs.</p>
+<p class="bullet">• Error message embeddings.</p>
+<p class="bullet">• Known flaky areas.</p>
+
+<hr>
+
+<h1>Section 6: Knowledge Graph Design</h1>
+
+<h2>Entity Schema</h2>
+
+<p>Core entities:</p>
+
+<p class="bullet">• Organization</p>
+<p class="bullet">• User</p>
+<p class="bullet">• Engineer</p>
+<p class="bullet">• Repository</p>
+<p class="bullet">• Branch</p>
+<p class="bullet">• Commit</p>
+<p class="bullet">• PullRequest</p>
+<p class="bullet">• Issue</p>
+<p class="bullet">• File</p>
+<p class="bullet">• Directory</p>
+<p class="bullet">• Symbol</p>
+<p class="bullet">• Class</p>
+<p class="bullet">• Function</p>
+<p class="bullet">• Method</p>
+<p class="bullet">• Interface</p>
+<p class="bullet">• Module</p>
+<p class="bullet">• Package</p>
+<p class="bullet">• Service</p>
+<p class="bullet">• APIEndpoint</p>
+<p class="bullet">• DatabaseTable</p>
+<p class="bullet">• Config</p>
+<p class="bullet">• DocumentationPage</p>
+<p class="bullet">• ArchitectureDecision</p>
+<p class="bullet">• Chunk</p>
+<p class="bullet">• Test</p>
+
+<h2>Relationship Schema</h2>
+
+<p>Important relationships:</p>
+
+<p class="bullet">• Organization OWNS Repository</p>
+<p class="bullet">• User MEMBER_OF Organization</p>
+<p class="bullet">• Engineer AUTHORED Commit</p>
+<p class="bullet">• Engineer OPENED PullRequest</p>
+<p class="bullet">• PullRequest TOUCHES File</p>
+<p class="bullet">• PullRequest INTRODUCES Symbol</p>
+<p class="bullet">• PullRequest REFERENCES Issue</p>
+<p class="bullet">• Commit MODIFIES File</p>
+<p class="bullet">• File DEFINES Symbol</p>
+<p class="bullet">• File IMPORTS File</p>
+<p class="bullet">• Function CALLS Function</p>
+<p class="bullet">• Class EXTENDS Class</p>
+<p class="bullet">• Method BELONGS_TO Class</p>
+<p class="bullet">• Service EXPOSES APIEndpoint</p>
+<p class="bullet">• APIEndpoint HANDLED_BY Function</p>
+<p class="bullet">• DocumentationPage DESCRIBES Service</p>
+<p class="bullet">• DocumentationPage REFERENCES File</p>
+<p class="bullet">• ArchitectureDecision CONSTRAINS Service</p>
+<p class="bullet">• Test COVERS Function</p>
+<p class="bullet">• File HAS_CHUNK Chunk</p>
+<p class="bullet">• Chunk MENTIONS Symbol</p>
+
+<h2>Storage Strategy</h2>
+
+<p>MVP:</p>
+
+<p class="bullet">• Store graph relationships in Postgres tables first.</p>
+<p class="bullet">• Mirror important relationships into Neo4j for graph queries and visualization.</p>
+<p class="bullet">• Keep Postgres as the source of truth.</p>
+
+<p>Reason:</p>
+
+<p class="bullet">• Postgres is easier to back up and migrate.</p>
+<p class="bullet">• Neo4j free tier may be limited.</p>
+<p class="bullet">• Graph can be rebuilt from Postgres if needed.</p>
+
+<p>Graph rebuild flow:</p>
+
+<pre><code>
+Postgres source tables
+    |
+    v
+Graph projection job
+    |
+    v
+Neo4j nodes and edges
+    |
+    v
+Architecture queries and visualization
+</code></pre>
+
+<hr>
+
+<h1>Section 7: RAG System</h1>
+
+<h2>Chunking Strategy</h2>
+
+<p>Use different chunking for docs and code.</p>
+
+<p>Documentation chunks:</p>
+
+<p class="bullet">• Split by Markdown headings.</p>
+<p class="bullet">• Target 300 to 800 tokens.</p>
+<p class="bullet">• Preserve heading path.</p>
+<p class="bullet">• Store neighboring section links.</p>
+<p class="bullet">• Keep source URL, file path, and line range.</p>
+
+<p>Code chunks:</p>
+
+<p class="bullet">• Prefer AST-aware chunks using tree-sitter.</p>
+<p class="bullet">• Chunk by function, class, method, route handler, config block, or test case.</p>
+<p class="bullet">• For large functions, split into logical blocks.</p>
+<p class="bullet">• Always include file path, symbol name, language, imports, and parent class/module.</p>
+
+<p>PR chunks:</p>
+
+<p class="bullet">• Chunk PR description.</p>
+<p class="bullet">• Chunk diff hunks.</p>
+<p class="bullet">• Store changed files.</p>
+<p class="bullet">• Store review comments and decision comments if accessible.</p>
+
+<h2>Embedding Strategy</h2>
+
+<p>Use at least two embedding namespaces:</p>
+
+<p class="bullet">• docs: natural language docs, READMEs, ADRs.</p>
+<p class="bullet">• code: code chunks, symbols, API routes.</p>
+
+<p>Recommended model:</p>
+
+<p class="bullet">• bge-small-en-v1.5 for first MVP.</p>
+<p class="bullet">• nomic-embed-text if using Ollama.</p>
+<p class="bullet">• Upgrade to a code-aware embedding model later.</p>
+
+<p>Embedding metadata:</p>
+
+<p class="bullet">• org_id</p>
+<p class="bullet">• repo_id</p>
+<p class="bullet">• branch</p>
+<p class="bullet">• file_path</p>
+<p class="bullet">• language</p>
+<p class="bullet">• chunk_type</p>
+<p class="bullet">• symbol_id</p>
+<p class="bullet">• commit_sha</p>
+<p class="bullet">• updated_at</p>
+<p class="bullet">• visibility</p>
+
+<h2>Indexing Strategy</h2>
+
+<p>Initial indexing:</p>
+
+<p class="bullet">1. Clone repository shallowly.</p>
+<p class="bullet">2. Respect ignore rules.</p>
+<p class="bullet">3. Skip binaries, lockfiles unless needed, generated files, build artifacts, and large files.</p>
+<p class="bullet">4. Parse file tree.</p>
+<p class="bullet">5. Detect frameworks.</p>
+<p class="bullet">6. Extract symbols and dependencies.</p>
+<p class="bullet">7. Generate summaries.</p>
+<p class="bullet">8. Embed chunks.</p>
+<p class="bullet">9. Write graph edges.</p>
+
+<p>Incremental indexing:</p>
+
+<p class="bullet">1. GitHub webhook receives push or PR event.</p>
+<p class="bullet">2. Fetch changed files.</p>
+<p class="bullet">3. Delete stale chunks for changed files.</p>
+<p class="bullet">4. Re-parse only changed files.</p>
+<p class="bullet">5. Update changed graph edges.</p>
+<p class="bullet">6. Recompute affected summaries.</p>
+<p class="bullet">7. Store new commit snapshot.</p>
+
+<h2>Hybrid Retrieval</h2>
+
+<p>Search stack:</p>
+
+<p class="bullet">• Exact keyword search for symbols, filenames, API paths, errors.</p>
+<p class="bullet">• Vector search for conceptual questions.</p>
+<p class="bullet">• Graph expansion for related functions, imports, tests, owners, and docs.</p>
+<p class="bullet">• Recency boost for recently changed files.</p>
+<p class="bullet">• Authority boost for README, docs, ADRs, and high-centrality files.</p>
+
+<p>Example:</p>
+
+<pre><code>
+Question: &quot;Where is payment authorization enforced?&quot;
+
+Keyword candidates:
+    authorize, payment, permission, route names
+
+Vector candidates:
+    docs about payment flow
+
+Graph candidates:
+    route handler -&gt; service -&gt; auth middleware -&gt; tests
+
+Final context:
+    payment route, auth middleware, payment service, ADR, tests
+</code></pre>
+
+<h2>Re-ranking</h2>
+
+<p>MVP:</p>
+
+<p class="bullet">• Score candidates using weighted heuristic:</p>
+<p>  - exact match score</p>
+<p>  - vector similarity</p>
+<p>  - graph distance</p>
+<p>  - file authority</p>
+<p>  - recency</p>
+<p>  - chunk type</p>
+
+<p>Upgrade:</p>
+
+<p class="bullet">• Use open-source cross-encoder reranker such as bge-reranker-base.</p>
+
+<h2>Context Management</h2>
+
+<p>Context pack format:</p>
+
+<p class="bullet">• User question.</p>
+<p class="bullet">• Interpreted intent.</p>
+<p class="bullet">• Top evidence items.</p>
+<p class="bullet">• Graph relationships.</p>
+<p class="bullet">• Relevant snippets.</p>
+<p class="bullet">• Known constraints.</p>
+<p class="bullet">• Explicit unknowns.</p>
+
+<p>Rules:</p>
+
+<p class="bullet">• Keep final context under model limit.</p>
+<p class="bullet">• Prefer fewer, stronger citations.</p>
+<p class="bullet">• Include line ranges where possible.</p>
+<p class="bullet">• Do not include unrelated chunks just because they are semantically similar.</p>
+<p class="bullet">• Summarize long files before sending to LLM.</p>
+
+<hr>
+
+<h1>Section 8: Database Schema</h1>
+
+<h2>PostgreSQL Schema</h2>
+
+<pre><code>
+create table organizations (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  slug text unique not null,
+  created_at timestamptz default now()
+);
+
+create table users (
+  id uuid primary key default gen_random_uuid(),
+  github_user_id bigint unique,
+  email text,
+  name text,
+  avatar_url text,
+  created_at timestamptz default now()
+);
+
+create table organization_members (
+  organization_id uuid references organizations(id) on delete cascade,
+  user_id uuid references users(id) on delete cascade,
+  role text not null check (role in ('owner','admin','member','viewer')),
+  created_at timestamptz default now(),
+  primary key (organization_id, user_id)
+);
+
+create table github_installations (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid references organizations(id) on delete cascade,
+  installation_id bigint unique not null,
+  account_login text not null,
+  created_at timestamptz default now()
+);
+
+create table repositories (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid references organizations(id) on delete cascade,
+  github_repo_id bigint unique,
+  full_name text not null,
+  default_branch text not null default 'main',
+  visibility text not null,
+  last_indexed_commit text,
+  indexing_status text not null default 'pending',
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create table files (
+  id uuid primary key default gen_random_uuid(),
+  repository_id uuid references repositories(id) on delete cascade,
+  path text not null,
+  language text,
+  size_bytes integer,
+  sha text,
+  is_generated boolean default false,
+  summary text,
+  updated_at timestamptz default now(),
+  unique (repository_id, path)
+);
+
+create table symbols (
+  id uuid primary key default gen_random_uuid(),
+  repository_id uuid references repositories(id) on delete cascade,
+  file_id uuid references files(id) on delete cascade,
+  name text not null,
+  qualified_name text,
+  kind text not null,
+  start_line integer,
+  end_line integer,
+  signature text,
+  summary text,
+  created_at timestamptz default now()
+);
+
+create table chunks (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid references organizations(id) on delete cascade,
+  repository_id uuid references repositories(id) on delete cascade,
+  file_id uuid references files(id) on delete cascade,
+  symbol_id uuid references symbols(id) on delete set null,
+  chunk_type text not null,
+  content text not null,
+  content_hash text not null,
+  start_line integer,
+  end_line integer,
+  metadata jsonb not null default '{}',
+  created_at timestamptz default now()
+);
+
+create extension if not exists vector;
+
+create table chunk_embeddings (
+  chunk_id uuid primary key references chunks(id) on delete cascade,
+  embedding vector(384),
+  model text not null,
+  created_at timestamptz default now()
+);
+
+create table pull_requests (
+  id uuid primary key default gen_random_uuid(),
+  repository_id uuid references repositories(id) on delete cascade,
+  github_pr_number integer not null,
+  title text,
+  body text,
+  author_login text,
+  base_branch text,
+  head_branch text,
+  state text,
+  merged boolean default false,
+  created_at timestamptz,
+  updated_at timestamptz,
+  unique (repository_id, github_pr_number)
+);
+
+create table commits (
+  id uuid primary key default gen_random_uuid(),
+  repository_id uuid references repositories(id) on delete cascade,
+  sha text not null,
+  author_login text,
+  message text,
+  committed_at timestamptz,
+  unique (repository_id, sha)
+);
+
+create table graph_edges (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid references organizations(id) on delete cascade,
+  repository_id uuid references repositories(id) on delete cascade,
+  source_type text not null,
+  source_id uuid not null,
+  relationship text not null,
+  target_type text not null,
+  target_id uuid not null,
+  weight numeric default 1,
+  metadata jsonb not null default '{}',
+  created_at timestamptz default now()
+);
+
+create table agent_runs (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid references organizations(id) on delete cascade,
+  repository_id uuid references repositories(id) on delete cascade,
+  agent_type text not null,
+  input jsonb not null,
+  output jsonb,
+  status text not null default 'running',
+  model text,
+  started_at timestamptz default now(),
+  completed_at timestamptz
+);
+
+create table feedback (
+  id uuid primary key default gen_random_uuid(),
+  agent_run_id uuid references agent_runs(id) on delete cascade,
+  user_id uuid references users(id) on delete set null,
+  rating integer check (rating between 1 and 5),
+  label text,
+  comment text,
+  created_at timestamptz default now()
+);
+</code></pre>
+
+<h2>Neo4j Schema</h2>
+
+<p>Node labels:</p>
+
+<pre><code>
+(:Organization {id, name, slug})
+(:Repository {id, full_name, default_branch})
+(:File {id, path, language})
+(:Directory {path})
+(:Symbol {id, name, qualified_name, kind})
+(:Function {id, name, qualified_name})
+(:Class {id, name, qualified_name})
+(:PullRequest {id, number, title, state})
+(:Commit {sha, message})
+(:Engineer {login, name})
+(:Issue {id, number, title})
+(:Service {id, name})
+(:APIEndpoint {method, path})
+(:DocumentationPage {id, path, title})
+(:ArchitectureDecision {id, title, status})
+</code></pre>
+
+<p>Relationships:</p>
+
+<pre><code>
+(:Organization)-[:OWNS]-&gt;(:Repository)
+(:Repository)-[:CONTAINS]-&gt;(:File)
+(:File)-[:DEFINES]-&gt;(:Symbol)
+(:File)-[:IMPORTS]-&gt;(:File)
+(:Function)-[:CALLS]-&gt;(:Function)
+(:Class)-[:EXTENDS]-&gt;(:Class)
+(:PullRequest)-[:TOUCHES]-&gt;(:File)
+(:PullRequest)-[:AUTHORED_BY]-&gt;(:Engineer)
+(:Commit)-[:MODIFIES]-&gt;(:File)
+(:DocumentationPage)-[:DESCRIBES]-&gt;(:Service)
+(:DocumentationPage)-[:REFERENCES]-&gt;(:File)
+(:ArchitectureDecision)-[:CONSTRAINS]-&gt;(:Service)
+(:Service)-[:EXPOSES]-&gt;(:APIEndpoint)
+(:APIEndpoint)-[:HANDLED_BY]-&gt;(:Function)
+</code></pre>
+
+<p>Indexes:</p>
+
+<pre><code>
+create constraint repository_id if not exists for (r:Repository) require r.id is unique;
+create constraint file_id if not exists for (f:File) require f.id is unique;
+create constraint symbol_id if not exists for (s:Symbol) require s.id is unique;
+create index file_path if not exists for (f:File) on (f.path);
+create index symbol_name if not exists for (s:Symbol) on (s.name);
+</code></pre>
+
+<h2>Vector Storage Schema</h2>
+
+<p>Core fields:</p>
+
+<p class="bullet">• chunk_id</p>
+<p class="bullet">• embedding</p>
+<p class="bullet">• model</p>
+<p class="bullet">• repository_id</p>
+<p class="bullet">• file_id</p>
+<p class="bullet">• chunk_type</p>
+<p class="bullet">• language</p>
+<p class="bullet">• symbol_kind</p>
+<p class="bullet">• path</p>
+<p class="bullet">• line range</p>
+<p class="bullet">• commit sha</p>
+
+<p>Recommended pgvector index:</p>
+
+<pre><code>
+create index chunk_embeddings_hnsw_idx
+on chunk_embeddings
+using hnsw (embedding vector_cosine_ops);
+
+create index chunks_repo_type_idx
+on chunks(repository_id, chunk_type);
+</code></pre>
+
+<hr>
+
+<h1>Section 9: Development Roadmap</h1>
+
+<h2>Month 1: Foundation and Repository Indexing</h2>
+
+<p>Goal: Ingest GitHub repositories and answer basic grounded questions.</p>
+
+<p>Week 1:</p>
+
+<p class="bullet">• Finalize product scope.</p>
+<p class="bullet">• Create GitHub organization and public landing repo.</p>
+<p class="bullet">• Build design mockups.</p>
+<p class="bullet">• Set up monorepo, CI, Docker Compose.</p>
+<p class="bullet">• Create FastAPI backend and React frontend.</p>
+<p class="bullet">• Create Postgres schema.</p>
+
+<p>Deliverables:</p>
+
+<p class="bullet">• Running local app.</p>
+<p class="bullet">• Auth mock.</p>
+<p class="bullet">• Basic dashboard.</p>
+<p class="bullet">• Database migrations.</p>
+
+<p>Week 2:</p>
+
+<p class="bullet">• Build GitHub OAuth and GitHub App installation.</p>
+<p class="bullet">• Store installations and repositories.</p>
+<p class="bullet">• Build repository fetcher.</p>
+<p class="bullet">• Implement file filtering.</p>
+<p class="bullet">• Store file tree and raw metadata.</p>
+
+<p>Deliverables:</p>
+
+<p class="bullet">• Connect GitHub repo.</p>
+<p class="bullet">• List repositories.</p>
+<p class="bullet">• Start ingestion job.</p>
+
+<p>Week 3:</p>
+
+<p class="bullet">• Add parser pipeline.</p>
+<p class="bullet">• Extract README/docs.</p>
+<p class="bullet">• Add tree-sitter for one or two languages only.</p>
+<p class="bullet">• Create chunks.</p>
+<p class="bullet">• Generate embeddings locally.</p>
+<p class="bullet">• Store chunks and embeddings in pgvector.</p>
+
+<p>Deliverables:</p>
+
+<p class="bullet">• Searchable code/docs chunks.</p>
+<p class="bullet">• Basic semantic search endpoint.</p>
+
+<p>Week 4:</p>
+
+<p class="bullet">• Build chat endpoint with citations.</p>
+<p class="bullet">• Implement hybrid retrieval v1.</p>
+<p class="bullet">• Build indexing status UI.</p>
+<p class="bullet">• Add architecture summary v1.</p>
+<p class="bullet">• Test with 5 public repos.</p>
+
+<p>Deliverables:</p>
+
+<p class="bullet">• Ask questions about a repo.</p>
+<p class="bullet">• Answers cite files.</p>
+<p class="bullet">• Demo-ready repo summary.</p>
+
+<p>Expected outcome:</p>
+
+<p class="bullet">• A user can connect a GitHub repo and ask basic architecture/code questions.</p>
+
+<h2>Month 2: Knowledge Graph and Architecture Intelligence</h2>
+
+<p>Goal: Explain code relationships and generate useful architecture summaries.</p>
+
+<p>Week 5:</p>
+
+<p class="bullet">• Add symbol extraction for JavaScript/TypeScript and Python.</p>
+<p class="bullet">• Store functions, classes, imports.</p>
+<p class="bullet">• Create graph_edges table.</p>
+<p class="bullet">• Build graph queries for file neighbors.</p>
+
+<p>Deliverables:</p>
+
+<p class="bullet">• File relationship map.</p>
+<p class="bullet">• Symbol search.</p>
+
+<p>Week 6:</p>
+
+<p class="bullet">• Add Neo4j projection.</p>
+<p class="bullet">• Build architecture graph view.</p>
+<p class="bullet">• Add module/service detection heuristics.</p>
+<p class="bullet">• Add package and route parsing.</p>
+
+<p>Deliverables:</p>
+
+<p class="bullet">• Visual service/module map.</p>
+<p class="bullet">• Cypher-based graph queries.</p>
+
+<p>Week 7:</p>
+
+<p class="bullet">• Build Architecture Agent.</p>
+<p class="bullet">• Generate architecture summaries by repo.</p>
+<p class="bullet">• Detect entry points, APIs, data stores, external services.</p>
+<p class="bullet">• Add docs-vs-code gap report.</p>
+
+<p>Deliverables:</p>
+
+<p class="bullet">• Architecture report page.</p>
+<p class="bullet">• Downloadable markdown report.</p>
+
+<p>Week 8:</p>
+
+<p class="bullet">• Improve retrieval quality.</p>
+<p class="bullet">• Add reranking heuristic.</p>
+<p class="bullet">• Add feedback buttons.</p>
+<p class="bullet">• Add answer confidence and unknowns.</p>
+<p class="bullet">• Run usability tests with 5 to 10 developers.</p>
+
+<p>Deliverables:</p>
+
+<p class="bullet">• Better chat accuracy.</p>
+<p class="bullet">• Feedback logging.</p>
+<p class="bullet">• Architecture demo script.</p>
+
+<p>Expected outcome:</p>
+
+<p class="bullet">• The product feels like it understands a repository, not just files.</p>
+
+<h2>Month 3: PR Review Agent and Growth Loop</h2>
+
+<p>Goal: Create the &quot;wow&quot; feature and public acquisition loop.</p>
+
+<p>Week 9:</p>
+
+<p class="bullet">• Implement GitHub PR webhooks.</p>
+<p class="bullet">• Fetch PR diff.</p>
+<p class="bullet">• Map changed hunks to files and symbols.</p>
+<p class="bullet">• Retrieve related code, docs, and PR history.</p>
+
+<p>Deliverables:</p>
+
+<p class="bullet">• PR ingestion pipeline.</p>
+<p class="bullet">• PR context pack.</p>
+
+<p>Week 10:</p>
+
+<p class="bullet">• Build Code Review Agent.</p>
+<p class="bullet">• Generate private review summary first.</p>
+<p class="bullet">• Add risk scoring.</p>
+<p class="bullet">• Add missing test detection.</p>
+<p class="bullet">• Add repository-specific review rules.</p>
+
+<p>Deliverables:</p>
+
+<p class="bullet">• Review dashboard.</p>
+<p class="bullet">• Agent output without posting comments yet.</p>
+
+<p>Week 11:</p>
+
+<p class="bullet">• Enable GitHub PR comments.</p>
+<p class="bullet">• Add safe mode: only comment when confidence is high.</p>
+<p class="bullet">• Add comment deduplication.</p>
+<p class="bullet">• Add feedback labels: useful, wrong, too noisy.</p>
+
+<p>Deliverables:</p>
+
+<p class="bullet">• GitHub PR Review Agent.</p>
+<p class="bullet">• Demo on sample PRs.</p>
+
+<p>Week 12:</p>
+
+<p class="bullet">• Build public repo analyzer.</p>
+<p class="bullet">• Generate shareable public architecture reports.</p>
+<p class="bullet">• Add waitlist capture.</p>
+<p class="bullet">• Publish open-source core.</p>
+<p class="bullet">• Launch to student communities and open-source maintainers.</p>
+
+<p>Deliverables:</p>
+
+<p class="bullet">• Public growth page.</p>
+<p class="bullet">• Shareable reports.</p>
+<p class="bullet">• First 50 waitlist users.</p>
+
+<p>Expected outcome:</p>
+
+<p class="bullet">• Users can see immediate value in PRs.</p>
+
+<h2>Month 4: Validation, Reliability, and Fundraising Readiness</h2>
+
+<p>Goal: Turn demo into pilot-ready product.</p>
+
+<p>Week 13:</p>
+
+<p class="bullet">• Improve indexing reliability.</p>
+<p class="bullet">• Add webhook incremental updates.</p>
+<p class="bullet">• Add job retries and failure visibility.</p>
+<p class="bullet">• Add usage limits.</p>
+
+<p>Deliverables:</p>
+
+<p class="bullet">• Stable indexing pipeline.</p>
+<p class="bullet">• Admin debugging tools.</p>
+
+<p>Week 14:</p>
+
+<p class="bullet">• Add multi-repo organization support.</p>
+<p class="bullet">• Improve permission checks.</p>
+<p class="bullet">• Add basic team roles.</p>
+<p class="bullet">• Add data deletion flow.</p>
+
+<p>Deliverables:</p>
+
+<p class="bullet">• Safer team usage.</p>
+<p class="bullet">• Basic compliance story.</p>
+
+<p>Week 15:</p>
+
+<p class="bullet">• Run pilots with 3 to 5 teams.</p>
+<p class="bullet">• Measure onboarding use cases and PR comment quality.</p>
+<p class="bullet">• Improve prompts and retrieval based on feedback.</p>
+<p class="bullet">• Create case studies.</p>
+
+<p>Deliverables:</p>
+
+<p class="bullet">• Pilot feedback.</p>
+<p class="bullet">• Product metrics.</p>
+<p class="bullet">• Demo quotes.</p>
+
+<p>Week 16:</p>
+
+<p class="bullet">• Prepare YC/investor materials.</p>
+<p class="bullet">• Record demo video.</p>
+<p class="bullet">• Create landing page.</p>
+<p class="bullet">• Create pricing page.</p>
+<p class="bullet">• Decide open-source roadmap.</p>
+
+<p>Deliverables:</p>
+
+<p class="bullet">• Investor deck.</p>
+<p class="bullet">• YC application draft.</p>
+<p class="bullet">• Public GitHub repo.</p>
+<p class="bullet">• Launch checklist.</p>
+
+<p>Expected outcome:</p>
+
+<p class="bullet">• A credible MVP with users, feedback, and a focused wedge.</p>
+
+<hr>
+
+<h1>Section 10: Team Structure</h1>
+
+<p>Assume 8 students.</p>
+
+<h2>Student 1: Technical Lead / AI Architect</h2>
+
+<p>Responsibilities:</p>
+
+<p class="bullet">• Own overall architecture.</p>
+<p class="bullet">• Design RAG and agent workflows.</p>
+<p class="bullet">• Review backend and AI code.</p>
+<p class="bullet">• Decide model/provider strategy.</p>
+<p class="bullet">• Maintain technical roadmap.</p>
+
+<h2>Student 2: AI Engineer - Retrieval</h2>
+
+<p>Responsibilities:</p>
+
+<p class="bullet">• Chunking and embeddings.</p>
+<p class="bullet">• Hybrid retrieval.</p>
+<p class="bullet">• Reranking.</p>
+<p class="bullet">• Evaluation datasets.</p>
+<p class="bullet">• Answer citation quality.</p>
+
+<h2>Student 3: AI Engineer - Agents</h2>
+
+<p>Responsibilities:</p>
+
+<p class="bullet">• Repository Understanding Agent.</p>
+<p class="bullet">• Architecture Agent.</p>
+<p class="bullet">• Code Review Agent.</p>
+<p class="bullet">• Prompt engineering.</p>
+<p class="bullet">• Agent run logging and feedback loops.</p>
+
+<h2>Student 4: Backend Engineer</h2>
+
+<p>Responsibilities:</p>
+
+<p class="bullet">• FastAPI services.</p>
+<p class="bullet">• Database schema.</p>
+<p class="bullet">• GitHub OAuth and GitHub App.</p>
+<p class="bullet">• API endpoints.</p>
+<p class="bullet">• Job orchestration.</p>
+
+<h2>Student 5: Backend/Platform Engineer</h2>
+
+<p>Responsibilities:</p>
+
+<p class="bullet">• Ingestion workers.</p>
+<p class="bullet">• Tree-sitter parsing.</p>
+<p class="bullet">• GitHub webhook processing.</p>
+<p class="bullet">• Queue and retry system.</p>
+<p class="bullet">• Object storage.</p>
+
+<h2>Student 6: Frontend Engineer</h2>
+
+<p>Responsibilities:</p>
+
+<p class="bullet">• React/Next.js app.</p>
+<p class="bullet">• Dashboard.</p>
+<p class="bullet">• Chat UI.</p>
+<p class="bullet">• Architecture report UI.</p>
+<p class="bullet">• PR review settings UI.</p>
+
+<h2>Student 7: DevOps/Security Engineer</h2>
+
+<p>Responsibilities:</p>
+
+<p class="bullet">• Docker Compose.</p>
+<p class="bullet">• CI/CD.</p>
+<p class="bullet">• Deployment.</p>
+<p class="bullet">• Secrets management.</p>
+<p class="bullet">• Observability.</p>
+<p class="bullet">• Access control.</p>
+
+<h2>Student 8: Product/Growth Engineer</h2>
+
+<p>Responsibilities:</p>
+
+<p class="bullet">• User interviews.</p>
+<p class="bullet">• Landing page.</p>
+<p class="bullet">• Public repo analyzer.</p>
+<p class="bullet">• Demo scripts.</p>
+<p class="bullet">• Analytics.</p>
+<p class="bullet">• Community launch.</p>
+<p class="bullet">• Documentation.</p>
+
+<p>Operating rhythm:</p>
+
+<p class="bullet">• Weekly sprint planning.</p>
+<p class="bullet">• 2 demos per month.</p>
+<p class="bullet">• Every feature must have an owner.</p>
+<p class="bullet">• Every agent must have an eval set.</p>
+<p class="bullet">• Every user interview should produce a product decision.</p>
+
+<hr>
+
+<h1>Section 11: MVP Plan</h1>
+
+<h2>Minimum Features</h2>
+
+<p>Build only:</p>
+
+<p class="bullet">• GitHub App connection.</p>
+<p class="bullet">• Repo and docs ingestion.</p>
+<p class="bullet">• Code/docs semantic search.</p>
+<p class="bullet">• Architecture summary.</p>
+<p class="bullet">• Chat with citations.</p>
+<p class="bullet">• PR Review Agent.</p>
+<p class="bullet">• Public repo analyzer.</p>
+<p class="bullet">• Basic dashboard.</p>
+
+<h2>What Not To Build</h2>
+
+<p>Do not build in the MVP:</p>
+
+<p class="bullet">• Slack integration.</p>
+<p class="bullet">• Jira integration.</p>
+<p class="bullet">• Email ingestion.</p>
+<p class="bullet">• Enterprise SSO.</p>
+<p class="bullet">• Full autonomous code editing.</p>
+<p class="bullet">• IDE extension.</p>
+<p class="bullet">• Custom model training.</p>
+<p class="bullet">• Multi-cloud deployment.</p>
+<p class="bullet">• Kubernetes.</p>
+<p class="bullet">• Complex billing system.</p>
+<p class="bullet">• Perfect graph visualization.</p>
+<p class="bullet">• Support for every programming language.</p>
+
+<h2>Fastest Route To Validation</h2>
+
+<p class="bullet">1. Pick TypeScript and Python repositories first.</p>
+<p class="bullet">2. Build a public repo analyzer.</p>
+<p class="bullet">3. Analyze popular open-source repos and share reports.</p>
+<p class="bullet">4. Let users ask 5 free questions about a repo.</p>
+<p class="bullet">5. Ask for email to enable PR Review Agent.</p>
+<p class="bullet">6. Run PR reviews on 3 pilot teams.</p>
+<p class="bullet">7. Measure how many comments are useful.</p>
+
+<p>Validation metrics:</p>
+
+<p class="bullet">• 30 percent of public analyzer users ask a follow-up question.</p>
+<p class="bullet">• 10 percent join waitlist.</p>
+<p class="bullet">• 5 pilot teams install GitHub App.</p>
+<p class="bullet">• PR Review Agent produces at least 1 useful comment per 3 PRs.</p>
+<p class="bullet">• Less than 20 percent of comments are marked noisy or wrong.</p>
+<p class="bullet">• At least 3 teams say they would pay.</p>
+
+<hr>
+
+<h1>Section 12: Monetization</h1>
+
+<h2>Free Tier</h2>
+
+<p>Price: USD 0/month.</p>
+
+<p>Limits:</p>
+
+<p class="bullet">• Public repositories only, or 1 private repo.</p>
+<p class="bullet">• 1 seat.</p>
+<p class="bullet">• 100 questions/month.</p>
+<p class="bullet">• 10 PR reviews/month.</p>
+<p class="bullet">• Limited indexing frequency.</p>
+<p class="bullet">• Community support.</p>
+
+<p>Purpose:</p>
+
+<p class="bullet">• Growth.</p>
+<p class="bullet">• Open-source adoption.</p>
+<p class="bullet">• Student and indie developer usage.</p>
+
+<h2>Startup Tier</h2>
+
+<p>Price: USD 19 to USD 29 per developer/month, or USD 99/month flat for up to 5 developers.</p>
+
+<p>Includes:</p>
+
+<p class="bullet">• Private repositories.</p>
+<p class="bullet">• 5 to 10 seats.</p>
+<p class="bullet">• 1 organization.</p>
+<p class="bullet">• 10 repositories.</p>
+<p class="bullet">• 1,000 questions/month.</p>
+<p class="bullet">• 200 PR reviews/month.</p>
+<p class="bullet">• Weekly architecture reports.</p>
+
+<p>Target:</p>
+
+<p class="bullet">• Early-stage startups.</p>
+<p class="bullet">• Agencies.</p>
+<p class="bullet">• Small teams.</p>
+
+<h2>Team Tier</h2>
+
+<p>Price: USD 49 per developer/month or USD 499/month for up to 20 developers.</p>
+
+<p>Includes:</p>
+
+<p class="bullet">• Multi-repo support.</p>
+<p class="bullet">• Higher PR review limits.</p>
+<p class="bullet">• Ownership inference.</p>
+<p class="bullet">• Team roles.</p>
+<p class="bullet">• Better audit logs.</p>
+<p class="bullet">• Priority support.</p>
+<p class="bullet">• Custom review rules.</p>
+
+<p>Target:</p>
+
+<p class="bullet">• Growing engineering teams.</p>
+
+<h2>Enterprise Tier</h2>
+
+<p>Price: USD 20K to USD 100K/year depending on size.</p>
+
+<p>Includes:</p>
+
+<p class="bullet">• Self-hosted or VPC deployment.</p>
+<p class="bullet">• SSO/SAML.</p>
+<p class="bullet">• Advanced permission sync.</p>
+<p class="bullet">• Audit logs.</p>
+<p class="bullet">• Dedicated support.</p>
+<p class="bullet">• Custom model routing.</p>
+<p class="bullet">• Compliance features.</p>
+<p class="bullet">• Private graph and vector infrastructure.</p>
+
+<p>Target:</p>
+
+<p class="bullet">• Regulated companies.</p>
+<p class="bullet">• Large engineering organizations.</p>
+
+<h2>Pricing Philosophy</h2>
+
+<p>Charge for:</p>
+
+<p class="bullet">• Private code understanding.</p>
+<p class="bullet">• PR review automation.</p>
+<p class="bullet">• Team collaboration.</p>
+<p class="bullet">• Security and compliance.</p>
+<p class="bullet">• Higher usage.</p>
+
+<p>Do not charge early for:</p>
+
+<p class="bullet">• Public repo analyzer.</p>
+<p class="bullet">• Open-source projects.</p>
+<p class="bullet">• Student experimentation.</p>
+
+<hr>
+
+<h1>Section 13: Security</h1>
+
+<h2>Data Isolation</h2>
+
+<p>Rules:</p>
+
+<p class="bullet">• Every table includes organization_id where relevant.</p>
+<p class="bullet">• All queries are scoped by organization and repository.</p>
+<p class="bullet">• Background jobs carry organization context.</p>
+<p class="bullet">• Vector and graph queries must filter by organization/repository.</p>
+<p class="bullet">• Never mix context across organizations.</p>
+
+<h2>Access Control</h2>
+
+<p>MVP:</p>
+
+<p class="bullet">• GitHub OAuth.</p>
+<p class="bullet">• GitHub App installation permissions.</p>
+<p class="bullet">• Organization roles: owner, admin, member, viewer.</p>
+<p class="bullet">• Repository access synced from GitHub where feasible.</p>
+
+<p>Later:</p>
+
+<p class="bullet">• SSO/SAML.</p>
+<p class="bullet">• SCIM.</p>
+<p class="bullet">• Fine-grained RBAC.</p>
+<p class="bullet">• Policy engine such as OpenFGA or Casbin.</p>
+
+<h2>Secrets Management</h2>
+
+<p>Local:</p>
+
+<p class="bullet">• .env files excluded from Git.</p>
+<p class="bullet">• Example env file committed.</p>
+
+<p>Hosted:</p>
+
+<p class="bullet">• Use platform secret managers.</p>
+<p class="bullet">• Rotate GitHub App private keys when needed.</p>
+<p class="bullet">• Encrypt stored tokens.</p>
+<p class="bullet">• Store only needed permissions.</p>
+
+<p>Rules:</p>
+
+<p class="bullet">• Never log tokens.</p>
+<p class="bullet">• Never send secrets to LLMs.</p>
+<p class="bullet">• Redact secrets during ingestion.</p>
+<p class="bullet">• Run secret scanning before indexing chunks.</p>
+
+<h2>Permission Systems</h2>
+
+<p>GitHub App permissions:</p>
+
+<p class="bullet">• Repository contents: read.</p>
+<p class="bullet">• Pull requests: read/write only for PR comments.</p>
+<p class="bullet">• Metadata: read.</p>
+<p class="bullet">• Issues: optional later.</p>
+<p class="bullet">• Checks: optional later.</p>
+
+<p>Principle of least privilege:</p>
+
+<p class="bullet">• Start with read-only and request write access only when PR Review Agent is enabled.</p>
+<p class="bullet">• Let admins disable PR comments.</p>
+<p class="bullet">• Add dry-run review mode.</p>
+
+<h2>Security Risks and Mitigations</h2>
+
+<p>Risk: Private code leakage to external LLMs.</p>
+
+<p>Mitigation:</p>
+
+<p class="bullet">• Default to local models for private repos.</p>
+<p class="bullet">• Make provider routing explicit.</p>
+<p class="bullet">• Add &quot;no external LLM&quot; mode.</p>
+
+<p>Risk: Prompt injection from repository docs.</p>
+
+<p>Mitigation:</p>
+
+<p class="bullet">• Treat retrieved content as untrusted data.</p>
+<p class="bullet">• System prompt states that repo content cannot override policies.</p>
+<p class="bullet">• Strip suspicious instructions from docs before final context.</p>
+
+<p>Risk: Over-permissioned GitHub App.</p>
+
+<p>Mitigation:</p>
+
+<p class="bullet">• Minimal permissions.</p>
+<p class="bullet">• Separate read-only mode and PR-comment mode.</p>
+
+<p>Risk: Cross-tenant retrieval leakage.</p>
+
+<p>Mitigation:</p>
+
+<p class="bullet">• Mandatory organization filters.</p>
+<p class="bullet">• Integration tests for tenancy.</p>
+<p class="bullet">• Row-level security if using Supabase.</p>
+
+<hr>
+
+<h1>Section 14: Investor Pitch</h1>
+
+<h2>One-Line Pitch</h2>
+
+<p>Engineering Brain is the AI memory layer that understands your GitHub repositories, docs, architecture, and PR history like a senior engineer.</p>
+
+<h2>Elevator Pitch</h2>
+
+<p>Engineering teams waste enormous time rediscovering how their own systems work. Current AI coding tools are powerful, but they often lack durable company-specific engineering memory. Engineering Brain connects to GitHub and documentation, builds a code-aware knowledge graph, and answers architecture questions with citations. Its wedge is an AI PR Review Agent that comments on pull requests using past architectural decisions and repository context. We start free and open-source for small teams, then monetize private repositories, team features, and enterprise deployment.</p>
+
+<h2>YC Application Summary</h2>
+
+<p>We are building Engineering Brain, an AI engineering intelligence platform for software teams. It connects to GitHub and docs, indexes code, PRs, commits, and architecture relationships, then acts like a senior engineer that can answer questions and review pull requests with citations. The initial wedge is a GitHub PR Review Agent that flags risky changes and cites relevant code, docs, and historical decisions. Teams already use AI coding tools, but those tools do not maintain durable organizational engineering memory. We are starting with students, open-source maintainers, and startups using a free-first product and public repo analyzer for distribution.</p>
+
+<h2>Demo Script</h2>
+
+<p>Demo setup:</p>
+
+<p class="bullet">• Use a real public repo.</p>
+<p class="bullet">• Show GitHub App connection.</p>
+<p class="bullet">• Show indexing status.</p>
+<p class="bullet">• Show architecture summary.</p>
+<p class="bullet">• Ask an engineering question.</p>
+<p class="bullet">• Open a sample PR.</p>
+<p class="bullet">• Show the PR Review Agent comment with citations.</p>
+
+<p>Script:</p>
+
+<p class="bullet">1. &quot;This is Engineering Brain. It connects to GitHub and reads the repo, docs, PRs, and architecture relationships.&quot;</p>
+<p class="bullet">2. &quot;Here is a freshly indexed repository. The system has detected the main modules, entry points, API routes, and dependency graph.&quot;</p>
+<p class="bullet">3. &quot;I can ask, 'How does authentication work?' The answer cites the auth middleware, route handlers, and docs.&quot;</p>
+<p class="bullet">4. &quot;Now here is the real wedge: a pull request changed an auth-sensitive route.&quot;</p>
+<p class="bullet">5. &quot;Engineering Brain reviewed the PR and found that the change bypasses a pattern used elsewhere. It cites the related file and historical decision.&quot;</p>
+<p class="bullet">6. &quot;This saves senior engineers from repeating context and helps new engineers avoid architecture mistakes.&quot;</p>
+
+<hr>
+
+<h1>Section 15: Implementation Details</h1>
+
+<h2>Folder Structure</h2>
+
+<pre><code>
+engineering-brain/
+  apps/
+    web/
+      src/
+        app/
+        components/
+        lib/
+        styles/
+      package.json
+    api/
+      app/
+        main.py
+        api/
+          routes_auth.py
+          routes_github.py
+          routes_repos.py
+          routes_search.py
+          routes_chat.py
+          routes_agents.py
+        core/
+          config.py
+          security.py
+          logging.py
+        db/
+          models.py
+          migrations/
+        services/
+          github_service.py
+          repo_service.py
+          search_service.py
+          chat_service.py
+        agents/
+          repository_agent.py
+          architecture_agent.py
+          code_review_agent.py
+          documentation_agent.py
+          bug_agent.py
+        retrieval/
+          chunking.py
+          embeddings.py
+          hybrid_search.py
+          rerank.py
+          context_pack.py
+        graph/
+          writer.py
+          queries.py
+          neo4j_projection.py
+        workers/
+          ingest_repo.py
+          index_file.py
+          review_pr.py
+          summarize_architecture.py
+      pyproject.toml
+  packages/
+    shared-types/
+    prompts/
+    evals/
+  infra/
+    docker-compose.yml
+    render.yaml
+    cloudflare-pages.md
+  docs/
+    architecture.md
+    security.md
+    api.md
+    roadmap.md
+  scripts/
+    seed_demo_repo.py
+    run_evals.py
+</code></pre>
+
+<h2>API Design</h2>
+
+<p>Authentication:</p>
+
+<pre><code>
+GET  /auth/github/login
+GET  /auth/github/callback
+POST /auth/logout
+GET  /me
+</code></pre>
+
+<p>GitHub:</p>
+
+<pre><code>
+POST /github/webhooks
+GET  /github/installations
+GET  /github/repositories
+POST /github/repositories/{repo_id}/sync
+</code></pre>
+
+<p>Repositories:</p>
+
+<pre><code>
+GET  /repos
+GET  /repos/{repo_id}
+GET  /repos/{repo_id}/index-status
+GET  /repos/{repo_id}/files
+GET  /repos/{repo_id}/files/{file_id}
+GET  /repos/{repo_id}/symbols
+</code></pre>
+
+<p>Search:</p>
+
+<pre><code>
+POST /search
+POST /search/code
+POST /search/docs
+POST /search/hybrid
+</code></pre>
+
+<p>Chat:</p>
+
+<pre><code>
+POST /chat
+GET  /chat/sessions
+GET  /chat/sessions/{session_id}
+</code></pre>
+
+<p>Agents:</p>
+
+<pre><code>
+POST /agents/repository-summary
+POST /agents/architecture-summary
+POST /agents/pr-review
+POST /agents/documentation-audit
+POST /agents/bug-investigation
+GET  /agents/runs/{run_id}
+</code></pre>
+
+<p>Public analyzer:</p>
+
+<pre><code>
+POST /public/analyze
+GET  /public/reports/{report_id}
+</code></pre>
+
+<h2>Microservice Architecture</h2>
+
+<p>MVP should be a modular monolith plus workers.</p>
+
+<pre><code>
+api service:
+  auth
+  GitHub webhooks
+  search
+  chat
+  agent orchestration
+
+worker service:
+  repo ingestion
+  embeddings
+  graph projection
+  PR review
+  report generation
+
+frontend service:
+  dashboard
+  chat
+  reports
+  settings
+</code></pre>
+
+<p>Why not microservices immediately:</p>
+
+<p class="bullet">• Student team velocity matters more than distributed system purity.</p>
+<p class="bullet">• Debugging is easier.</p>
+<p class="bullet">• Deployment is cheaper.</p>
+
+<p>Split later when:</p>
+
+<p class="bullet">• Ingestion jobs block API performance.</p>
+<p class="bullet">• PR review needs independent scaling.</p>
+<p class="bullet">• Enterprise customers require isolated workers.</p>
+
+<h2>Deployment Instructions</h2>
+
+<p>Local:</p>
+
+<pre><code>
+git clone https://github.com/your-org/engineering-brain
+cd engineering-brain
+cp .env.example .env
+docker compose up -d postgres redis neo4j
+cd apps/api
+uv sync
+uv run fastapi dev app/main.py
+cd ../web
+npm install
+npm run dev
+</code></pre>
+
+<p>Hosted MVP:</p>
+
+<p class="bullet">1. Create Supabase project.</p>
+<p class="bullet">2. Enable pgvector.</p>
+<p class="bullet">3. Apply database migrations.</p>
+<p class="bullet">4. Create GitHub App.</p>
+<p class="bullet">5. Add GitHub App credentials to backend secrets.</p>
+<p class="bullet">6. Deploy API to Render or Railway.</p>
+<p class="bullet">7. Deploy worker to Render worker or scheduled job.</p>
+<p class="bullet">8. Deploy frontend to Cloudflare Pages.</p>
+<p class="bullet">9. Create Upstash Redis database.</p>
+<p class="bullet">10. Create Cloudflare R2 bucket.</p>
+<p class="bullet">11. Create Neo4j AuraDB Free database.</p>
+<p class="bullet">12. Add webhook URL to GitHub App.</p>
+<p class="bullet">13. Run demo repo ingestion.</p>
+
+<p>Environment variables:</p>
+
+<pre><code>
+DATABASE_URL=
+REDIS_URL=
+GITHUB_APP_ID=
+GITHUB_APP_PRIVATE_KEY=
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+GITHUB_WEBHOOK_SECRET=
+LLM_PROVIDER=
+GROQ_API_KEY=
+OLLAMA_BASE_URL=
+R2_ACCESS_KEY_ID=
+R2_SECRET_ACCESS_KEY=
+R2_BUCKET=
+NEO4J_URI=
+NEO4J_USERNAME=
+NEO4J_PASSWORD=
+</code></pre>
+
+<hr>
+
+<h1>Section 16: Open-Source Strategy</h1>
+
+<h2>What To Open Source</h2>
+
+<p>Open-source:</p>
+
+<p class="bullet">• Repo analyzer core.</p>
+<p class="bullet">• Chunking pipeline.</p>
+<p class="bullet">• Code graph extractor.</p>
+<p class="bullet">• Prompt templates.</p>
+<p class="bullet">• Local-only version.</p>
+<p class="bullet">• Public architecture report generator.</p>
+<p class="bullet">• Evaluation datasets for open-source repos.</p>
+
+<p>Keep proprietary initially:</p>
+
+<p class="bullet">• Hosted multi-tenant platform.</p>
+<p class="bullet">• PR Review Agent quality tuning.</p>
+<p class="bullet">• Enterprise permission sync.</p>
+<p class="bullet">• Usage analytics.</p>
+<p class="bullet">• Billing.</p>
+<p class="bullet">• Managed deployment tooling.</p>
+
+<h2>How To Attract GitHub Stars</h2>
+
+<p>Build public artifacts developers want:</p>
+
+<p class="bullet">• &quot;Paste any GitHub repo, get an architecture report.&quot;</p>
+<p class="bullet">• Badges: &quot;Architecture understood by Engineering Brain.&quot;</p>
+<p class="bullet">• Weekly teardown posts of popular open-source repos.</p>
+<p class="bullet">• Before/after PR review demos.</p>
+<p class="bullet">• Free local CLI.</p>
+<p class="bullet">• &quot;Ask your repo&quot; demo with no signup.</p>
+
+<p>Launch channels:</p>
+
+<p class="bullet">• GitHub.</p>
+<p class="bullet">• Hacker News.</p>
+<p class="bullet">• Reddit programming communities.</p>
+<p class="bullet">• Product Hunt.</p>
+<p class="bullet">• LinkedIn developer posts.</p>
+<p class="bullet">• University startup communities.</p>
+<p class="bullet">• Open-source maintainer outreach.</p>
+
+<p>Star-worthy README:</p>
+
+<p class="bullet">• GIF demo at the top.</p>
+<p class="bullet">• One-command local setup.</p>
+<p class="bullet">• Clear architecture diagram.</p>
+<p class="bullet">• Example output from a famous repo.</p>
+<p class="bullet">• Roadmap.</p>
+<p class="bullet">• Good first issues.</p>
+<p class="bullet">• Contributor guide.</p>
+
+<h2>Community Strategy</h2>
+
+<p>Community loops:</p>
+
+<p class="bullet">• Public Discord.</p>
+<p class="bullet">• Weekly build logs.</p>
+<p class="bullet">• Open issues for language parser support.</p>
+<p class="bullet">• Invite maintainers to submit repo reports.</p>
+<p class="bullet">• Student ambassador program.</p>
+<p class="bullet">• Monthly &quot;AI codebase understanding benchmark.&quot;</p>
+
+<p>Contributor paths:</p>
+
+<p class="bullet">• Add language parser.</p>
+<p class="bullet">• Add framework detector.</p>
+<p class="bullet">• Improve prompts.</p>
+<p class="bullet">• Add eval cases.</p>
+<p class="bullet">• Add UI improvements.</p>
+<p class="bullet">• Write docs.</p>
+
+<hr>
+
+<h1>Section 17: Risks</h1>
+
+<h2>Technical Risks</h2>
+
+<p>Risk: Retrieval quality is poor.</p>
+
+<p>Mitigation:</p>
+
+<p class="bullet">• Build eval set early.</p>
+<p class="bullet">• Use exact search plus vector search.</p>
+<p class="bullet">• Require citations.</p>
+<p class="bullet">• Log failed questions.</p>
+
+<p>Risk: PR comments are noisy.</p>
+
+<p>Mitigation:</p>
+
+<p class="bullet">• Start with dry-run mode.</p>
+<p class="bullet">• Comment only on high-confidence issues.</p>
+<p class="bullet">• Prefer fewer, deeper comments.</p>
+<p class="bullet">• Add feedback buttons.</p>
+
+<p>Risk: Free-tier limits break demos.</p>
+
+<p>Mitigation:</p>
+
+<p class="bullet">• Keep local demo path with Docker Compose.</p>
+<p class="bullet">• Cache public reports.</p>
+<p class="bullet">• Use rate limits.</p>
+<p class="bullet">• Keep fallback services.</p>
+
+<p>Risk: Large repositories are hard to index.</p>
+
+<p>Mitigation:</p>
+
+<p class="bullet">• File filters.</p>
+<p class="bullet">• Incremental indexing.</p>
+<p class="bullet">• Index only default branch first.</p>
+<p class="bullet">• Prioritize docs, source files, and config.</p>
+
+<p>Risk: Local models are not strong enough.</p>
+
+<p>Mitigation:</p>
+
+<p class="bullet">• Use local models for retrieval and summaries.</p>
+<p class="bullet">• Use free hosted LLMs for final answer where allowed.</p>
+<p class="bullet">• Keep provider adapter ready for paid models later.</p>
+
+<h2>Product Risks</h2>
+
+<p>Risk: Users already have Copilot/Cursor and do not see need.</p>
+
+<p>Mitigation:</p>
+
+<p class="bullet">• Focus on organization memory and PR review, not autocomplete.</p>
+
+<p>Risk: Users do not trust AI review comments.</p>
+
+<p>Mitigation:</p>
+
+<p class="bullet">• Cite evidence.</p>
+<p class="bullet">• Let teams configure strictness.</p>
+<p class="bullet">• Show dry-run summaries first.</p>
+
+<p>Risk: Setup friction is too high.</p>
+
+<p>Mitigation:</p>
+
+<p class="bullet">• Public repo analyzer first.</p>
+<p class="bullet">• GitHub App install flow.</p>
+<p class="bullet">• Sample repos.</p>
+
+<h2>Competition Risks</h2>
+
+<p>Risk: GitHub or Cursor ships similar features.</p>
+
+<p>Mitigation:</p>
+
+<p class="bullet">• Move faster in open-source and small-team segment.</p>
+<p class="bullet">• Build graph + documentation + PR-history specialization.</p>
+<p class="bullet">• Create community and self-hosted option.</p>
+
+<p>Risk: Enterprise search tools expand into code intelligence.</p>
+
+<p>Mitigation:</p>
+
+<p class="bullet">• Stay engineering-native.</p>
+<p class="bullet">• Win PR workflow.</p>
+<p class="bullet">• Offer low-cost self-hosted path.</p>
+
+<h2>Scaling Risks</h2>
+
+<p>Risk: Indexing costs grow with repository size.</p>
+
+<p>Mitigation:</p>
+
+<p class="bullet">• Incremental indexing.</p>
+<p class="bullet">• Queue-based processing.</p>
+<p class="bullet">• Usage quotas.</p>
+<p class="bullet">• Paid plans for private large repos.</p>
+
+<p>Risk: Multi-tenant security becomes complex.</p>
+
+<p>Mitigation:</p>
+
+<p class="bullet">• Build tenancy into schema from day one.</p>
+<p class="bullet">• Add tests for data isolation.</p>
+<p class="bullet">• Offer self-hosting for sensitive customers.</p>
+
+<hr>
+
+<h1>Section 18: Final Recommendation</h1>
+
+<h2>Is This Worth Building?</h2>
+
+<p>Yes. This is worth building if the team stays focused on GitHub plus documentation and avoids becoming a generic workplace AI search tool. The idea is strong because engineering teams already feel the pain, AI coding adoption is growing quickly, and most tools still struggle with durable organization-specific engineering context.</p>
+
+<h2>Probability Of Getting First Users</h2>
+
+<p>Estimated probability: high, around 70 percent if the team ships a public repo analyzer and personally recruits users.</p>
+
+<p>Reasons:</p>
+
+<p class="bullet">• Students can access other students, open-source maintainers, and startups.</p>
+<p class="bullet">• Public GitHub repo analysis is low-friction.</p>
+<p class="bullet">• Developers are curious about AI tools.</p>
+
+<h2>Probability Of Raising Funding</h2>
+
+<p>Estimated probability: moderate, around 20 to 35 percent after a working MVP and early pilots.</p>
+
+<p>Funding probability improves if:</p>
+
+<p class="bullet">• PR Review Agent produces consistently useful comments.</p>
+<p class="bullet">• At least 5 real teams install the GitHub App.</p>
+<p class="bullet">• Users report reduced onboarding or review time.</p>
+<p class="bullet">• The demo clearly shows architecture memory.</p>
+
+<p>Funding probability is weak if:</p>
+
+<p class="bullet">• The product is only another chat-with-repo clone.</p>
+<p class="bullet">• There are no users.</p>
+<p class="bullet">• Answers lack citations.</p>
+<p class="bullet">• The PR agent is noisy.</p>
+
+<h2>Most Important Feature To Focus On First</h2>
+
+<p>The most important feature is the PR Review Agent that comments on GitHub pull requests using codebase context, documentation, and past architecture decisions.</p>
+
+<p>Why:</p>
+
+<p class="bullet">• It appears in an existing workflow.</p>
+<p class="bullet">• It gives immediate value.</p>
+<p class="bullet">• It creates a memorable demo.</p>
+<p class="bullet">• It differentiates from generic repo chat.</p>
+<p class="bullet">• It can become the wedge into paid teams.</p>
+
+<h2>Final Build Order</h2>
+
+<p class="bullet">1. GitHub repo ingestion.</p>
+<p class="bullet">2. Code and docs search with citations.</p>
+<p class="bullet">3. Architecture summary.</p>
+<p class="bullet">4. Incremental webhook updates.</p>
+<p class="bullet">5. PR Review Agent dry-run.</p>
+<p class="bullet">6. GitHub PR comments.</p>
+<p class="bullet">7. Public repo analyzer.</p>
+<p class="bullet">8. Pilot teams.</p>
+
+<h2>Final CTO Advice</h2>
+
+<p>Do not build &quot;autonomous AI engineer&quot; first. Build trust first. Trust comes from grounded answers, citations, and useful PR comments. If the product becomes the tool that knows why the codebase works the way it does, autonomy becomes a natural next step.</p>
+
+
+</body>
+</html>
