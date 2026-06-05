@@ -58,7 +58,7 @@ class CodeReviewAgent:
             input=payload.model_dump(),
             started_at=started_at,
         )
-        index_store.save_agent_run(run_record)
+        await index_store.save_agent_run(run_record)
 
         try:
             diff = payload.diff
@@ -78,7 +78,7 @@ class CodeReviewAgent:
             # Get relevant codebase chunks (simple heuristic: embed the diff or use changed files as query)
             query = f"PR Title: {payload.title}\nFiles: {' '.join(changed_files)}"
             query_embedding = await ollama_adapter.embed(query)
-            chunks = index_store.get_chunks(payload.repo_id)
+            chunks = await index_store.get_chunks(payload.repo_id)
             
             citations = hybrid_rank_chunks(query, query_embedding, chunks, limit=10)
             
@@ -148,7 +148,7 @@ class CodeReviewAgent:
             run_record.output = response.model_dump()
             run_record.model = model_name
             run_record.completed_at = datetime.now(UTC).isoformat()
-            index_store.save_agent_run(run_record)
+            await index_store.save_agent_run(run_record)
 
             return response
 
@@ -157,7 +157,7 @@ class CodeReviewAgent:
             run_record.status = AgentRunStatus.failed
             run_record.error = str(e)
             run_record.completed_at = datetime.now(UTC).isoformat()
-            index_store.save_agent_run(run_record)
+            await index_store.save_agent_run(run_record)
             raise
 
 code_review_agent = CodeReviewAgent()

@@ -70,14 +70,14 @@ def _confidence(citations: list[Citation]) -> str:
 
 class ChatService:
     async def answer(self, payload: ChatRequest) -> ChatResponse:
-        repository = index_store.get_repository(payload.repo_id)
+        repository = await index_store.get_repository(payload.repo_id)
         if repository is None:
             raise HTTPException(status_code=404, detail="Repository not found")
 
         # 1. Embed the query (graceful None if Ollama unavailable)
         query_embedding = await ollama_adapter.embed(payload.question)
 
-        chunks = index_store.get_chunks(payload.repo_id)
+        chunks = await index_store.get_chunks(payload.repo_id)
 
         # 2. First-pass hybrid retrieval
         citations = hybrid_rank_chunks(
@@ -89,7 +89,7 @@ class ChatService:
 
         # 3. Graph expansion — find files neighboring top hits and re-rank
         if citations and repository.edge_count > 0:
-            neighbors = expand_graph_neighbors(
+            neighbors = await expand_graph_neighbors(
                 citations,
                 lambda fp: index_store.get_file_neighbors(payload.repo_id, fp),
             )
@@ -174,12 +174,12 @@ class ChatService:
           {"type": "token", "token": "<text>"}   — one per Ollama chunk
           {"type": "done", "citations": [...], "confidence": "...", "model_used": "..."}
         """
-        repository = index_store.get_repository(payload.repo_id)
+        repository = await index_store.get_repository(payload.repo_id)
         if repository is None:
             raise HTTPException(status_code=404, detail="Repository not found")
 
         query_embedding = await ollama_adapter.embed(payload.question)
-        chunks = index_store.get_chunks(payload.repo_id)
+        chunks = await index_store.get_chunks(payload.repo_id)
 
         # First-pass retrieval
         citations = hybrid_rank_chunks(
@@ -191,7 +191,7 @@ class ChatService:
 
         # Graph expansion
         if citations and repository.edge_count > 0:
-            neighbors = expand_graph_neighbors(
+            neighbors = await expand_graph_neighbors(
                 citations,
                 lambda fp: index_store.get_file_neighbors(payload.repo_id, fp),
             )

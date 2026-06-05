@@ -84,7 +84,7 @@ async def analyze_public_repo(request: Request, payload: PublicAnalyzeRequest, b
     _public_reports[report_id] = report
     
     # Initialize repository placeholder so worker can update it
-    index_store.create_repository(repo_id, payload.github_url, RepositorySource.github, payload.github_url)
+    await index_store.create_repository(repo_id, payload.github_url, RepositorySource.github, payload.github_url)
     
     background_tasks.add_task(generate_public_report, report_id, repo_id, payload.github_url)
     

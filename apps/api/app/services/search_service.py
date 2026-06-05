@@ -12,13 +12,13 @@ from app.services.index_store import index_store
 
 class SearchService:
     async def search(self, payload: SearchRequest) -> SearchResponse:
-        if index_store.get_repository(payload.repo_id) is None:
+        if await index_store.get_repository(payload.repo_id) is None:
             raise HTTPException(status_code=404, detail="Repository not found")
 
         # Embed the query for semantic ranking (None if Ollama unavailable)
         query_embedding = await ollama_adapter.embed(payload.query)
 
-        chunks = index_store.get_chunks(payload.repo_id)
+        chunks = await index_store.get_chunks(payload.repo_id)
         results = hybrid_rank_chunks(payload.query, query_embedding, chunks, payload.limit)
         return SearchResponse(query=payload.query, results=results)
 

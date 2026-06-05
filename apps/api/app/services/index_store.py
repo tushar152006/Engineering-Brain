@@ -1,8 +1,7 @@
-"""In-memory index store with JSON persistence, indexing status tracking,
-and Phase 2 symbol + dependency graph storage.
+"""In-memory and Persistent index store interface supporting PostgreSQL transition.
 
-Phase 1 placeholder — the public interface mirrors what Postgres + pgvector
-will expose in Phase 3 so we can swap the backend without touching services.
+This class acts as a transparent async interface for both in-memory JSON storage
+and PostgreSQL persistence. It switches dynamically based on settings.
 """
 
 from __future__ import annotations
@@ -28,7 +27,7 @@ from app.models.schemas import (
 
 
 class InMemoryIndexStore:
-    """Thread-safe in-memory index with local JSON persistence."""
+    """Thread-safe index store with local JSON persistence and dynamic PostgreSQL routing."""
 
     def __init__(self, storage_path: str | None = None) -> None:
         self._lock = RLock()
@@ -41,21 +40,20 @@ class InMemoryIndexStore:
         self._storage_path = Path(storage_path or settings.index_store_path)
         self._load()
 
-    # ------------------------------------------------------------------
-    # Repository CRUD
-    # ------------------------------------------------------------------
+    def _is_db(self) -> bool:
+        return bool(settings.use_persistent_store and settings.database_url)
 
-    def create_repository(
+    async def create_repository(
         self,
         repo_id: str,
         name: str,
         source: RepositorySource,
         source_url: str | None,
     ) -> RepositoryRecord:
-        """Create a placeholder record with status=indexing.
+        if self._is_db():
+            from app.db.persistent_store import get_persistent_store
+            return await get_persistent_store().create_repository(repo_id, name, source, source_url)
 
-        Call this before starting background work so the frontend can poll.
-        """
         record = RepositoryRecord(
             id=repo_id,
             name=name,
@@ -72,7 +70,7 @@ class InMemoryIndexStore:
             self._save()
         return record
 
-    def upsert_repository(
+    async def upsert_repository(
         self,
         repo_id: str,
         name: str,
@@ -85,6 +83,24 @@ class InMemoryIndexStore:
         symbols: list[Symbol] | None = None,
         edges: list[GraphEdge] | None = None,
     ) -> RepositoryRecord:
+        if self._is_db():
+            from app.db.persistent_store import get_persistent_store
+            await get_persistent_store().upsert_repository(
+                repo_id=repo_id,
+                name=name,
+                source=source,
+                source_url=source_url,
+                chunks=chunks,
+                symbols=symbols,
+                edges=edges,
+                languages=languages,
+                file_count=file_count,
+                status=status,
+            )
+            record = await get_persistent_store().get_repository(repo_id)
+            if record:
+                return record
+
         embedded_count = sum(1 for c in chunks if c.embedding is not None)
         sym_list = symbols or []
         edge_list = edges or []
@@ -112,14 +128,18 @@ class InMemoryIndexStore:
             self._save()
         return record
 
-    def set_repository_status(
+    async def set_repository_status(
         self,
         repo_id: str,
         status: IndexingStatus,
         *,
         error: str | None = None,
     ) -> None:
-        """Update only the status field of a repository record."""
+        if self._is_db():
+            from app.db.persistent_store import get_persistent_store
+            await get_persistent_store().set_repository_status(repo_id, status, error=error)
+            return
+
         with self._lock:
             repo = self._repositories.get(repo_id)
             if repo is None:
@@ -129,8 +149,12 @@ class InMemoryIndexStore:
             )
             self._save()
 
-    def update_embedded_count(self, repo_id: str, count: int) -> None:
-        """Update embedded_chunk_count during embedding pass."""
+    async def update_embedded_count(self, repo_id: str, count: int) -> None:
+        if self._is_db():
+            from app.db.persistent_store import get_persistent_store
+            await get_persistent_store().update_embedded_count(repo_id, count)
+            return
+
         with self._lock:
             repo = self._repositories.get(repo_id)
             if repo is None:
@@ -139,7 +163,11 @@ class InMemoryIndexStore:
                 update={"embedded_chunk_count": count}
             )
 
-    def list_repositories(self) -> list[RepositoryRecord]:
+    async def list_repositories(self) -> list[RepositoryRecord]:
+        if self._is_db():
+            from app.db.persistent_store import get_persistent_store
+            return await get_persistent_store().list_repositories()
+
         with self._lock:
             return sorted(
                 self._repositories.values(),
@@ -147,24 +175,43 @@ class InMemoryIndexStore:
                 reverse=True,
             )
 
-    def get_repository(self, repo_id: str) -> RepositoryRecord | None:
+    async def get_repository(self, repo_id: str) -> RepositoryRecord | None:
+        if self._is_db():
+            from app.db.persistent_store import get_persistent_store
+            return await get_persistent_store().get_repository(repo_id)
+
         with self._lock:
             return self._repositories.get(repo_id)
 
-    def get_chunks(self, repo_id: str) -> list[Chunk]:
+    async def get_chunks(self, repo_id: str) -> list[Chunk]:
+        if self._is_db():
+            from app.db.persistent_store import get_persistent_store
+            return await get_persistent_store().get_chunks(repo_id)
+
         with self._lock:
             return list(self._chunks_by_repo.get(repo_id, []))
 
-    def get_symbols(self, repo_id: str) -> list[Symbol]:
+    async def get_symbols(self, repo_id: str) -> list[Symbol]:
+        if self._is_db():
+            from app.db.persistent_store import get_persistent_store
+            return await get_persistent_store().get_symbols(repo_id)
+
         with self._lock:
             return list(self._symbols_by_repo.get(repo_id, []))
 
-    def get_edges(self, repo_id: str) -> list[GraphEdge]:
+    async def get_edges(self, repo_id: str) -> list[GraphEdge]:
+        if self._is_db():
+            from app.db.persistent_store import get_persistent_store
+            return await get_persistent_store().get_edges(repo_id)
+
         with self._lock:
             return list(self._edges_by_repo.get(repo_id, []))
 
-    def delete_repository(self, repo_id: str) -> bool:
-        """Remove a repository record and all its indexed data. Returns True if found."""
+    async def delete_repository(self, repo_id: str) -> bool:
+        if self._is_db():
+            from app.db.persistent_store import get_persistent_store
+            return await get_persistent_store().delete_repository(repo_id)
+
         with self._lock:
             if repo_id not in self._repositories:
                 return False
@@ -175,13 +222,12 @@ class InMemoryIndexStore:
             self._save()
         return True
 
-    # ------------------------------------------------------------------
-    # Graph queries
-    # ------------------------------------------------------------------
+    async def get_file_neighbors(self, repo_id: str, file_path: str) -> list[str]:
+        if self._is_db():
+            from app.db.persistent_store import get_persistent_store
+            return await get_persistent_store().get_file_neighbors(repo_id, file_path)
 
-    def get_file_neighbors(self, repo_id: str, file_path: str) -> list[str]:
-        """Return all files directly imported by or importing the given file."""
-        edges = self.get_edges(repo_id)
+        edges = await self.get_edges(repo_id)
         neighbors: set[str] = set()
         for edge in edges:
             if edge.source_path == file_path:
@@ -190,15 +236,15 @@ class InMemoryIndexStore:
                 neighbors.add(edge.source_path)
         return sorted(neighbors)
 
-    def get_symbols_for_file(self, repo_id: str, file_path: str) -> list[Symbol]:
-        """Return all symbols defined in the given file."""
-        return [s for s in self.get_symbols(repo_id) if s.file_path == file_path]
+    async def get_symbols_for_file(self, repo_id: str, file_path: str) -> list[Symbol]:
+        symbols = await self.get_symbols(repo_id)
+        return [s for s in symbols if s.file_path == file_path]
 
-    # ------------------------------------------------------------------
-    # Feedback
-    # ------------------------------------------------------------------
+    async def save_feedback(self, run_id: str, rating: int, label: FeedbackLabel | None, comment: str | None) -> FeedbackRecord:
+        if self._is_db():
+            from app.db.persistent_store import get_persistent_store
+            return await get_persistent_store().save_feedback(run_id, rating, label, comment)
 
-    def save_feedback(self, run_id: str, rating: int, label: FeedbackLabel | None, comment: str | None) -> FeedbackRecord:
         import uuid
         record = FeedbackRecord(
             id=str(uuid.uuid4()),
@@ -213,20 +259,29 @@ class InMemoryIndexStore:
             self._save()
         return record
 
-    def get_feedback(self) -> list[FeedbackRecord]:
+    async def get_feedback(self) -> list[FeedbackRecord]:
+        if self._is_db():
+            from app.db.persistent_store import get_persistent_store
+            return await get_persistent_store().get_feedback()
+
         with self._lock:
             return list(self._feedback.values())
 
-    # ------------------------------------------------------------------
-    # Agent Runs
-    # ------------------------------------------------------------------
+    async def save_agent_run(self, run: AgentRun) -> None:
+        if self._is_db():
+            from app.db.persistent_store import get_persistent_store
+            await get_persistent_store().save_agent_run(run)
+            return
 
-    def save_agent_run(self, run: AgentRun) -> None:
         with self._lock:
             self._agent_runs[run.id] = run
             self._save()
 
-    def get_agent_runs(self, repo_id: str) -> list[AgentRun]:
+    async def get_agent_runs(self, repo_id: str) -> list[AgentRun]:
+        if self._is_db():
+            from app.db.persistent_store import get_persistent_store
+            return await get_persistent_store().get_agent_runs(repo_id)
+
         with self._lock:
             return sorted(
                 [run for run in self._agent_runs.values() if run.repo_id == repo_id],
@@ -234,13 +289,13 @@ class InMemoryIndexStore:
                 reverse=True,
             )
 
-    def get_agent_run(self, run_id: str) -> AgentRun | None:
+    async def get_agent_run(self, run_id: str) -> AgentRun | None:
+        if self._is_db():
+            from app.db.persistent_store import get_persistent_store
+            return await get_persistent_store().get_agent_run(run_id)
+
         with self._lock:
             return self._agent_runs.get(run_id)
-
-    # ------------------------------------------------------------------
-    # Persistence
-    # ------------------------------------------------------------------
 
     def _load(self) -> None:
         if not self._storage_path.exists():
@@ -272,7 +327,6 @@ class InMemoryIndexStore:
                 for item in data.get("agent_runs", [])
             }
         except Exception:
-            # Corrupt store — start fresh
             self._repositories = {}
             self._chunks_by_repo = {}
             self._symbols_by_repo = {}

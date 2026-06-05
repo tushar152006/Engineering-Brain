@@ -174,9 +174,9 @@ def hybrid_rank_chunks(
     return [to_citation(c, s) for c, s in scored[:limit]]
 
 
-def expand_graph_neighbors(
+async def expand_graph_neighbors(
     top_citations: list[Citation],
-    file_neighbor_fn,  # callable(file_path) -> list[str]
+    file_neighbor_fn,  # callable(file_path) -> Coroutine[Any, Any, list[str]]
     depth: int = 1,
 ) -> set[str]:
     """Given top citations, return the set of file paths that are direct
@@ -186,7 +186,7 @@ def expand_graph_neighbors(
     """
     neighbors: set[str] = set()
     for citation in top_citations[:4]:  # Only expand top 4 to keep it fast
-        for neighbor_path in file_neighbor_fn(citation.file_path):
+        for neighbor_path in await file_neighbor_fn(citation.file_path):
             neighbors.add(neighbor_path)
     return neighbors
 

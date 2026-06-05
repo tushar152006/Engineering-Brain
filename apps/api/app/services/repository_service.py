@@ -106,7 +106,7 @@ async def _run_indexing(
         _enrich_chunks_with_symbols(chunks, symbols)
 
         # 5. Store with status=embedding so UI shows progress
-        index_store.upsert_repository(
+        await index_store.upsert_repository(
             repo_id=repo_id,
             name=name,
             source=source,
@@ -123,10 +123,10 @@ async def _run_indexing(
         embedded = await embed_chunks(chunks, ollama_adapter)
 
         # 7. Update embed count live
-        index_store.update_embedded_count(repo_id, embedded)
+        await index_store.update_embedded_count(repo_id, embedded)
 
         # 8. Final persist with ready status
-        index_store.upsert_repository(
+        await index_store.upsert_repository(
             repo_id=repo_id,
             name=name,
             source=source,
@@ -150,7 +150,7 @@ async def _run_indexing(
 
     except Exception as exc:
         logger.exception("Indexing failed for repo_id=%s: %s", repo_id, exc)
-        index_store.set_repository_status(
+        await index_store.set_repository_status(
             repo_id, IndexingStatus.failed, error=str(exc)
         )
 
@@ -181,7 +181,7 @@ class RepositoryService:
         repo_id = _repo_id(payload.source, source_url)
 
         # Create placeholder record immediately so polling works
-        record: RepositoryRecord = index_store.create_repository(
+        record: RepositoryRecord = await index_store.create_repository(
             repo_id=repo_id,
             name=name,
             source=payload.source,

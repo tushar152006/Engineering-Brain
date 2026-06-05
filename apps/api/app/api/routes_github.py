@@ -45,7 +45,7 @@ async def github_webhook(request: Request, background_tasks: BackgroundTasks):
             repo_full_name = payload_data.get("repository", {}).get("full_name")
             
             # Find local repo_id corresponding to this github repo
-            repos = index_store.list_repositories()
+            repos = await index_store.list_repositories()
             repo_id = None
             for r in repos:
                 if r.source == "github" and r.source_url and repo_full_name in r.source_url:

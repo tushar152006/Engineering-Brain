@@ -73,22 +73,22 @@ async def index_repository(
 
 
 @router.get("/api/repositories", response_model=list[RepositoryRecord])
-def list_repositories() -> list[RepositoryRecord]:
-    return index_store.list_repositories()
+async def list_repositories() -> list[RepositoryRecord]:
+    return await index_store.list_repositories()
 
 
 @router.get("/api/repositories/{repo_id}", response_model=RepositoryRecord)
-def get_repository(repo_id: str) -> RepositoryRecord:
-    repository = index_store.get_repository(repo_id)
+async def get_repository(repo_id: str) -> RepositoryRecord:
+    repository = await index_store.get_repository(repo_id)
     if repository is None:
         raise HTTPException(status_code=404, detail="Repository not found")
     return repository
 
 
 @router.get("/api/repositories/{repo_id}/status", response_model=IndexJobStatusResponse)
-def get_repository_status(repo_id: str) -> IndexJobStatusResponse:
+async def get_repository_status(repo_id: str) -> IndexJobStatusResponse:
     """Poll indexing progress. Returns current status and embedded chunk count."""
-    repository = index_store.get_repository(repo_id)
+    repository = await index_store.get_repository(repo_id)
     if repository is None:
         raise HTTPException(status_code=404, detail="Repository not found")
     return IndexJobStatusResponse(
@@ -103,9 +103,9 @@ def get_repository_status(repo_id: str) -> IndexJobStatusResponse:
 
 
 @router.delete("/api/repositories/{repo_id}", status_code=204)
-def delete_repository(repo_id: str) -> None:
+async def delete_repository(repo_id: str) -> None:
     """Permanently delete a repository record and all its indexed data."""
-    found = index_store.delete_repository(repo_id)
+    found = await index_store.delete_repository(repo_id)
     if not found:
         raise HTTPException(status_code=404, detail="Repository not found")
 
@@ -113,7 +113,7 @@ def delete_repository(repo_id: str) -> None:
 # ─── Phase 2: Symbol & Graph endpoints ───────────────────────────────────────
 
 @router.get("/api/repositories/{repo_id}/symbols", response_model=SymbolListResponse)
-def get_symbols(
+async def get_symbols(
     repo_id: str,
     kind: str | None = None,
     language: str | None = None,
@@ -128,10 +128,10 @@ def get_symbols(
       q        — search by symbol name (case-insensitive substring)
       limit    — max results (default 100)
     """
-    if index_store.get_repository(repo_id) is None:
+    if await index_store.get_repository(repo_id) is None:
         raise HTTPException(status_code=404, detail="Repository not found")
 
-    symbols = index_store.get_symbols(repo_id)
+    symbols = await index_store.get_symbols(repo_id)
 
     if kind:
         symbols = [s for s in symbols if s.kind == kind]
@@ -150,17 +150,17 @@ def get_symbols(
 
 
 @router.get("/api/repositories/{repo_id}/graph", response_model=GraphResponse)
-def get_graph(repo_id: str, max_nodes: int = 80) -> GraphResponse:
+async def get_graph(repo_id: str, max_nodes: int = 80) -> GraphResponse:
     """Return the file dependency graph for visualization.
 
     Returns nodes (files) and edges (import relationships).
     Large graphs are trimmed to max_nodes most-connected files.
     """
-    if index_store.get_repository(repo_id) is None:
+    if await index_store.get_repository(repo_id) is None:
         raise HTTPException(status_code=404, detail="Repository not found")
 
-    edges = index_store.get_edges(repo_id)
-    chunks = index_store.get_chunks(repo_id)
+    edges = await index_store.get_edges(repo_id)
+    chunks = await index_store.get_chunks(repo_id)
 
     # Build node set from edges
     file_paths: set[str] = set()
@@ -253,9 +253,9 @@ async def chat_stream(payload: ChatRequest) -> StreamingResponse:
 
 
 @router.post("/api/chat/feedback", response_model=FeedbackResponse)
-def submit_feedback(payload: FeedbackRequest) -> FeedbackResponse:
+async def submit_feedback(payload: FeedbackRequest) -> FeedbackResponse:
     """Submit user feedback for an agent run or chat session."""
-    record = index_store.save_feedback(
+    record = await index_store.save_feedback(
         run_id=payload.run_id,
         rating=payload.rating,
         label=payload.label,
@@ -267,9 +267,9 @@ def submit_feedback(payload: FeedbackRequest) -> FeedbackResponse:
 # ─── Architecture Summary ─────────────────────────────────────────────────────
 
 @router.post("/api/architecture-summary", response_model=ArchitectureSummaryResponse)
-def architecture_summary(payload: ArchitectureSummaryRequest) -> ArchitectureSummaryResponse:
+async def architecture_summary(payload: ArchitectureSummaryRequest) -> ArchitectureSummaryResponse:
     """Static architecture summary — instant, no LLM required."""
-    return architecture_service.summarize(payload)
+    return await architecture_service.summarize(payload)
 
 
 @router.post("/api/architecture-summary/deep", response_model=ArchitectureSummaryResponse)
@@ -310,7 +310,7 @@ async def trigger_pr_review(
     background_tasks: BackgroundTasks,
 ) -> AgentRun:
     """Trigger a manual code review for a PR in the background."""
-    if index_store.get_repository(repo_id) is None:
+    if await index_store.get_repository(repo_id) is None:
         raise HTTPException(status_code=404, detail="Repository not found")
         
     payload.repo_id = repo_id
@@ -326,7 +326,7 @@ async def trigger_pr_review(
         input=payload.model_dump(),
         started_at=started_at,
     )
-    index_store.save_agent_run(run_record)
+    await index_store.save_agent_run(run_record)
     
     # Dispatch code review agent to background task
     background_tasks.add_task(code_review_agent.review_pr, payload, run_id)
@@ -335,17 +335,17 @@ async def trigger_pr_review(
 
 
 @router.get("/api/repositories/{repo_id}/pr-reviews", response_model=list[AgentRun])
-def list_pr_reviews(repo_id: str) -> list[AgentRun]:
+async def list_pr_reviews(repo_id: str) -> list[AgentRun]:
     """List all code review runs for a repository."""
-    if index_store.get_repository(repo_id) is None:
+    if await index_store.get_repository(repo_id) is None:
         raise HTTPException(status_code=404, detail="Repository not found")
-    return index_store.get_agent_runs(repo_id)
+    return await index_store.get_agent_runs(repo_id)
 
 
 @router.get("/api/repositories/{repo_id}/pr-reviews/{run_id}", response_model=AgentRun)
-def get_pr_review(repo_id: str, run_id: str) -> AgentRun:
+async def get_pr_review(repo_id: str, run_id: str) -> AgentRun:
     """Get the details of a specific PR review run."""
-    run = index_store.get_agent_run(run_id)
+    run = await index_store.get_agent_run(run_id)
     if not run or run.repo_id != repo_id:
         raise HTTPException(status_code=404, detail="PR review run not found")
     return run

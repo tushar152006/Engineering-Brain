@@ -133,15 +133,15 @@ def _dynamic_next_steps(
 
 
 class ArchitectureService:
-    def summarize(self, payload: ArchitectureSummaryRequest) -> ArchitectureSummaryResponse:
+    async def summarize(self, payload: ArchitectureSummaryRequest) -> ArchitectureSummaryResponse:
         """Synchronous architecture summary (used by the route handler)."""
-        repository = index_store.get_repository(payload.repo_id)
+        repository = await index_store.get_repository(payload.repo_id)
         if repository is None:
             raise HTTPException(status_code=404, detail="Repository not found")
 
-        chunks = index_store.get_chunks(payload.repo_id)
-        symbols = index_store.get_symbols(payload.repo_id)
-        edges = index_store.get_edges(payload.repo_id)
+        chunks = await index_store.get_chunks(payload.repo_id)
+        symbols = await index_store.get_symbols(payload.repo_id)
+        edges = await index_store.get_edges(payload.repo_id)
 
         # --- Important files ---
         important: list[str] = []
@@ -264,10 +264,10 @@ class ArchitectureService:
     async def summarize_deep(self, payload: ArchitectureSummaryRequest) -> ArchitectureSummaryResponse:
         """Architecture summary with LLM-generated narrative (async, uses Ollama)."""
         # Get base summary first
-        base = self.summarize(payload)
+        base = await self.summarize(payload)
 
-        repository = index_store.get_repository(payload.repo_id)
-        symbols = index_store.get_symbols(payload.repo_id)
+        repository = await index_store.get_repository(payload.repo_id)
+        symbols = await index_store.get_symbols(payload.repo_id)
 
         # Build evidence for LLM
         evidence = _build_arch_evidence(
